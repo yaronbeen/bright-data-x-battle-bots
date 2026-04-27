@@ -1,35 +1,38 @@
 # TECH_DEBT.md
 
-## P0 — Next Session (Start Here)
+## P0 — Next Session
 
-- **Run a proper discovery session before any more code.** Ask about: information hierarchy, what a fan sees first, how the verdict connects to evidence, how prominent Bright Data branding should be, VS screen timing
-- **Redesign results page:** verdict hero card → "based on N Reddit mentions" label → collapsible evidence pool. Current flat list of evidence feels disconnected.
-- **Show bot images from the start** — in the dropdown area or as preview cards, not only after the verdict
-- **Fix LLM null responses** — Kimi K2.6 sometimes uses all tokens on reasoning, returns null content. Increase `max_tokens` or add retry logic with a simpler prompt
+- **Images**: 1.1MB for 10 thumbnails displayed at 120px. Convert to WebP, resize to 240px max. Should be ~100KB total.
+- **Timeouts**: No AbortController on SERP or LLM fetch. A slow API hangs forever. Add 30s timeout on SERP, 45s on LLM.
+- **Zero-result UI**: When SERP returns 0 Reddit results, show "Not enough Reddit discussion" with a suggested matchup. Currently shows "Too close to call" with no evidence.
 
 ## P1 — This Week
 
-- Add proper error handling UI for SERP timeouts (currently silent)
-- Add deduplication for Reddit results appearing in multiple queries
-- Fix `serp_api2` zone IP blocklist or permanently switch to `web_unlocker1` in docs
-- Make the deterministic fallback summary better so it works well even without LLM
+- **SERP dedup**: "Minotaur vs Tombstone" and "Tombstone vs Minotaur" return near-identical results. Drop the reversed query, save an API call.
+- **Result deduplication**: Same Reddit URL from multiple queries counted multiple times in sentiment.
+- **Cache-Control headers**: Static assets have no caching. Add `max-age=3600` on images, `max-age=60` on HTML.
+- **Sentiment context**: Keyword scoring is context-free. "Tombstone won" credits "won" to whichever bot's query returned it. At minimum check if bot name appears near the keyword.
 
 ## P2 — When Convenient
 
-- Add cost transparency per matchup (like unfancy-search does)
-- Consider Dockerizing with docker-compose
-- Add URL sharing via query params (`?a=minotaur&b=tombstone`)
-- Add more bots to roster (currently 10, could be 20+)
+- **LLM guardrail**: LLM can override deterministic winner. Add a check: if LLM disagrees with sentiment, display "AI sees it differently" rather than contradicting the bars.
+- **Mobile verdict card**: Stacks vertically, loses side-by-side screenshot appeal. Consider a compact horizontal layout even on mobile.
+- **Share button**: "Copy image" or "Share to Twitter" on the verdict card. The viral mechanic is currently screenshot-only.
+- **Path traversal**: `serveStatic` doesn't prevent `..` in URLs. Add path normalization.
 
 ## P3 — Nice To Have
 
-- Add historical comparison: "Last month Reddit favored X, now they favor Y"
-- Add shareable verdict cards (OG image generation)
-- Add a "random matchup" button
+- **Image generation**: Render verdict card as a PNG for download/OG preview.
+- **URL sharing**: `/matchup/minotaur-vs-tombstone` with OG metadata.
+- **Deploy to Cloudflare Workers** like unfancy-search.
+- **More bots**: Expand roster beyond 10.
 
 ## Resolved Items
 
-- 2026-04-27: Removed Three.js — user wanted functional over fancy
-- 2026-04-27: Switched from Web Unlocker to SERP-via-Web-Unlocker pattern
-- 2026-04-27: Switched from Nemotron to Kimi K2.6 — reasoning model leakage unfixable
-- 2026-04-27: Downloaded bot images locally — wiki blocks hotlinking
+- 2026-04-27: Removed Three.js
+- 2026-04-27: Switched from Nemotron to Claude Haiku (reasoning leakage unfixable)
+- 2026-04-27: Implemented progressive reveal (sentiment before LLM)
+- 2026-04-27: Added animations (verdict pop, staggered evidence, crossfade previews)
+- 2026-04-27: Added branding inside verdict card for screenshots
+- 2026-04-27: Fixed XSS via URL sanitization
+- 2026-04-27: Added same-bot validation in frontend
