@@ -6,9 +6,14 @@
   "scripts": {
     "dev": "node src/server.js",
     "start": "node src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "deploy": "wrangler pages deploy public --project-name battlebots-h2h",
+    "preview": "wrangler pages dev public --port 3200"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "wrangler": "^4.85.0"
   }
 }
