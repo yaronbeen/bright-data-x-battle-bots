@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BattleBots Head-to-Head — Who Does Reddit Think Wins?</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Bright Data x BattleBots</p>
+        <h1>Who does Reddit think wins?</h1>
+        <p class="sub">Pick two bots. We scrape live Reddit discussion via Bright Data and tell you who the fans favor — with receipts.</p>
+      </header>
+
+      <form id="matchup">
+        <div class="selectors">
+          <div class="bot-select">
+            <label for="botA">Bot A</label>
+            <select id="botA"><option value="">Loading…</option></select>
+          </div>
+          <span class="vs-label">VS</span>
+          <div class="bot-select">
+            <label for="botB">Bot B</label>
+            <select id="botB"><option value="">Loading…</option></select>
+          </div>
+        </div>
+        <button type="submit" id="btn">Who wins?</button>
+      </form>
+
+      <!-- VS Showdown Screen (appears during loading) -->
+      <section id="vs-screen" class="vs-screen" hidden>
+        <div class="vs-bot vs-bot-a">
+          <img id="vs-imgA" src="" alt="" />
+          <h3 id="vs-nameA"></h3>
+          <p id="vs-weaponA"></p>
+        </div>
+        <div class="vs-flash">
+          <span>VS</span>
+          <div id="vs-status" class="vs-status">Building Reddit search queries…</div>
+        </div>
+        <div class="vs-bot vs-bot-b">
+          <img id="vs-imgB" src="" alt="" />
+          <h3 id="vs-nameB"></h3>
+          <p id="vs-weaponB"></p>
+        </div>
+      </section>
+
+      <!-- Verdict -->
+      <section id="verdict-card" class="card verdict" hidden>
+        <div class="verdict-header">
+          <div class="winner-img-wrap">
+            <img id="winner-img" src="" alt="" />
+          </div>
+          <div>
+            <h2 id="verdict-title"></h2>
+            <span id="verdict-confidence" class="badge"></span>
+          </div>
+        </div>
+        <div id="verdict-summary" class="verdict-body"></div>
+        <p id="llm-note" class="note"></p>
+      </section>
+
+      <!-- Side by side sentiment -->
+      <section id="comparison" class="comparison" hidden style="display:none">
+        <div class="card bot-card" id="cardA">
+          <div class="bot-card-header">
+            <img id="imgA" class="bot-thumb" src="" alt="" />
+            <div>
+              <h3 id="nameA"></h3>
+              <p id="metaA" class="bot-meta"></p>
+            </div>
+          </div>
+          <div id="barsA" class="bars"></div>
+          <p id="relevantA" class="note"></p>
+        </div>
+        <div class="card bot-card" id="cardB">
+          <div class="bot-card-header">
+            <img id="imgB" class="bot-thumb" src="" alt="" />
+            <div>
+              <h3 id="nameB"></h3>
+              <p id="metaB" class="bot-meta"></p>
+            </div>
+          </div>
+          <div id="barsB" class="bars"></div>
+          <p id="relevantB" class="note"></p>
+        </div>
+      </section>
+
+      <!-- Evidence -->
+      <section id="evidence-card" class="card" hidden>
+        <h2>Cited Reddit Evidence</h2>
+        <div id="evidence"></div>
+      </section>
+
+      <!-- Trace -->
+      <details id="trace-details" hidden>
+        <summary class="trace-toggle">Show Bright Data SERP trace</summary>
+        <div class="card">
+          <table id="trace-table">
+            <thead><tr><th>Query</th><th>Status</th><th>Results</th><th>Time</th></tr></thead>
+            <tbody id="trace-body"></tbody>
+          </table>
+        </div>
+      </details>
+
+      <footer>
+        Powered by <a href="https://brightdata.com" target="_blank" rel="noreferrer">Bright Data</a> SERP API
+      </footer>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
