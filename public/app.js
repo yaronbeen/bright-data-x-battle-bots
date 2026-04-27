@@ -1,220 +1,209 @@
 const botASelect = document.querySelector('#botA');
 const botBSelect = document.querySelector('#botB');
+const previewA = document.querySelector('#previewA');
+const previewB = document.querySelector('#previewB');
+const metaA = document.querySelector('#pickerMetaA');
+const metaB = document.querySelector('#pickerMetaB');
 const btn = document.querySelector('#btn');
 const form = document.querySelector('#matchup');
-const vsScreen = document.querySelector('#vs-screen');
-const vsStatus = document.querySelector('#vs-status');
+const suggestionsEl = document.querySelector('#suggestions');
+const statusBar = document.querySelector('#status-bar');
+const statusText = document.querySelector('#status-text');
 const verdictCard = document.querySelector('#verdict-card');
-const verdictTitle = document.querySelector('#verdict-title');
-const verdictConfidence = document.querySelector('#verdict-confidence');
-const verdictSummary = document.querySelector('#verdict-summary');
-const winnerImg = document.querySelector('#winner-img');
-const llmNote = document.querySelector('#llm-note');
-const comparison = document.querySelector('#comparison');
-const evidenceCard = document.querySelector('#evidence-card');
-const evidenceEl = document.querySelector('#evidence');
+const allEvidenceEl = document.querySelector('#all-evidence');
 const traceDetails = document.querySelector('#trace-details');
-const traceBody = document.querySelector('#trace-body');
 
 let roster = [];
 
-// Load roster
+// ── Load roster + render suggested matchups ──
 fetch('/api/roster').then((r) => r.json()).then((data) => {
   if (!data.ok) return;
   roster = data.roster;
-  const options = roster.map((b) => `<option value="${b.id}">${b.name}</option>`);
-  botASelect.innerHTML = '<option value="">Select bot…</option>' + options.join('');
-  botBSelect.innerHTML = '<option value="">Select bot…</option>' + options.join('');
+  const opts = roster.map((b) => `<option value="${b.id}">${b.name}</option>`);
+  botASelect.innerHTML = '<option value="">Pick a bot…</option>' + opts.join('');
+  botBSelect.innerHTML = '<option value="">Pick a bot…</option>' + opts.join('');
   botASelect.value = 'minotaur';
   botBSelect.value = 'tombstone';
-});
+  updatePreview('A'); updatePreview('B');
 
-function findBot(id) { return roster.find((b) => b.id === id); }
-
-// Progress steps shown during loading
-const STEPS = [
-  { text: 'Building Reddit search queries…', delay: 0 },
-  { text: 'Hitting Bright Data SERP API (6 parallel queries)…', delay: 1200 },
-  { text: 'Extracting Reddit mentions for Bot A…', delay: 4000 },
-  { text: 'Extracting Reddit mentions for Bot B…', delay: 6000 },
-  { text: 'Scoring sentiment across all results…', delay: 9000 },
-  { text: 'Generating AI verdict from evidence…', delay: 12000 },
-  { text: 'Almost there — LLM writing the analysis…', delay: 20000 },
-];
-
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const botAId = botASelect.value;
-  const botBId = botBSelect.value;
-  if (!botAId || !botBId) return;
-
-  const botA = findBot(botAId);
-  const botB = findBot(botBId);
-
-  // Hide previous results
-  btn.disabled = true;
-  btn.textContent = 'Analyzing…';
-  verdictCard.hidden = true;
-  comparison.hidden = true;
-  comparison.style.display = 'none';
-  evidenceCard.hidden = true;
-  traceDetails.hidden = true;
-
-  // Show VS screen with progress
-  showVsScreen(botA, botB);
-  const stepTimers = startProgressSteps();
-
-  try {
-    const res = await fetch('/api/predict', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ botA: botAId, botB: botBId }),
+  // Suggested matchups
+  if (data.suggested) {
+    suggestionsEl.innerHTML = data.suggested.map((s) =>
+      `<button type="button" class="suggestion" data-a="${s.a}" data-b="${s.b}">${s.label}</button>`
+    ).join('');
+    suggestionsEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('.suggestion');
+      if (!btn) return;
+      botASelect.value = btn.dataset.a;
+      botBSelect.value = btn.dataset.b;
+      updatePreview('A'); updatePreview('B');
+      form.requestSubmit();
     });
-    const data = await res.json();
-
-    // Stop progress timers
-    stepTimers.forEach(clearTimeout);
-
-    // Brief pause so the VS screen feels intentional
-    await delay(600);
-    vsScreen.hidden = true;
-
-    if (!data.ok) {
-      verdictCard.hidden = false;
-      verdictTitle.textContent = data.error;
-      verdictSummary.innerHTML = '';
-      return;
-    }
-
-    // Reveal results with staggered timing
-    renderVerdict(data);
-    await delay(300);
-    renderComparison(data);
-    await delay(200);
-    renderEvidence(data.evidence);
-    renderTrace(data.trace);
-  } catch (err) {
-    stepTimers.forEach(clearTimeout);
-    vsScreen.hidden = true;
-    verdictCard.hidden = false;
-    verdictTitle.textContent = `Error: ${err.message}`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Who wins?';
   }
 });
 
-function showVsScreen(botA, botB) {
-  vsScreen.hidden = false;
-  document.querySelector('#vs-imgA').src = botA.image;
-  document.querySelector('#vs-imgA').alt = botA.name;
-  document.querySelector('#vs-nameA').textContent = botA.name;
-  document.querySelector('#vs-weaponA').textContent = botA.weapon;
-  document.querySelector('#vs-imgB').src = botB.image;
-  document.querySelector('#vs-imgB').alt = botB.name;
-  document.querySelector('#vs-nameB').textContent = botB.name;
-  document.querySelector('#vs-weaponB').textContent = botB.weapon;
-  vsStatus.textContent = STEPS[0].text;
+// ── Live photo previews on dropdown change ──
+botASelect.addEventListener('change', () => updatePreview('A'));
+botBSelect.addEventListener('change', () => updatePreview('B'));
+
+function updatePreview(side) {
+  const select = side === 'A' ? botASelect : botBSelect;
+  const img = side === 'A' ? previewA : previewB;
+  const meta = side === 'A' ? metaA : metaB;
+  const bot = roster.find((b) => b.id === select.value);
+  if (bot) {
+    img.src = bot.image; img.alt = bot.name;
+    meta.textContent = `${bot.weapon} · ${bot.team}`;
+  } else {
+    img.src = ''; img.alt = ''; meta.textContent = '';
+  }
 }
 
-function startProgressSteps() {
-  return STEPS.slice(1).map((step) =>
-    setTimeout(() => { vsStatus.textContent = step.text; }, step.delay)
-  );
+// ── Main submit → streaming prediction ──
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!botASelect.value || !botBSelect.value) return;
+
+  btn.disabled = true; btn.textContent = 'Analyzing…';
+  verdictCard.hidden = true; allEvidenceEl.hidden = true; traceDetails.hidden = true;
+    statusBar.hidden = false; statusBar.style.display = ''; statusText.textContent = 'Querying Bright Data SERP API…';
+
+  try {
+    const res = await fetch('/api/predict-stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ botA: botASelect.value, botB: botBSelect.value }),
+    });
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      // Process complete NDJSON lines
+      const lines = buffer.split('\n');
+      buffer = lines.pop(); // keep incomplete line in buffer
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const event = JSON.parse(line);
+          handleStreamEvent(event);
+        } catch { /* skip bad lines */ }
+      }
+    }
+  } catch (err) {
+    statusText.textContent = `Error: ${err.message}`;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Who wins?';
+  }
+});
+
+function handleStreamEvent(event) {
+  switch (event.type) {
+    case 'start':
+      statusText.textContent = `Searching Reddit for ${event.botA.name} vs ${event.botB.name}…`;
+      break;
+
+    case 'serp_done':
+      const total = [...event.traceA, ...event.traceB].reduce((n, t) => n + (t.resultCount || 0), 0);
+      statusText.textContent = `Found ${total} Reddit results. Scoring sentiment…`;
+      break;
+
+    case 'sentiment':
+      statusText.textContent = `Sentiment scored. Generating AI verdict…`;
+      // Could show early sentiment bars here in the future
+      break;
+
+    case 'done':
+      statusBar.hidden = true; statusBar.style.display = 'none';
+      renderVerdict(event.result);
+      renderAllEvidence(event.result.allEvidence);
+      renderTrace(event.result.trace);
+      break;
+
+    case 'error':
+      statusText.textContent = `Error: ${event.error}`;
+      break;
+  }
 }
 
+// ── Render verdict card ──
 function renderVerdict(data) {
   verdictCard.hidden = false;
 
-  const isTossUp = data.verdict.winner === 'Too close to call';
-  verdictTitle.textContent = isTossUp
-    ? `${data.botA.name} vs ${data.botB.name} — Too close to call`
-    : `Reddit says: ${data.verdict.winner}`;
-  verdictConfidence.textContent = data.verdict.confidence;
+  // Top section: both bots + winner
+  document.querySelector('#v-imgA').src = data.botA.image;
+  document.querySelector('#v-nameA').textContent = data.botA.name;
+  document.querySelector('#v-imgB').src = data.botB.image;
+  document.querySelector('#v-nameB').textContent = data.botB.name;
 
-  if (!isTossUp) {
-    const winner = data.verdict.winnerId === data.botA.id ? data.botA : data.botB;
-    winnerImg.src = winner.image;
-    winnerImg.alt = winner.name;
-    winnerImg.parentElement.style.display = '';
+  document.querySelector('#verdict-winner').textContent = data.verdict.winner;
+  document.querySelector('#verdict-confidence').textContent = data.verdict.confidence;
+
+  // Mini sentiment bars
+  renderMiniBars('#v-barsA', data.botA.sentiment);
+  renderMiniBars('#v-barsB', data.botB.sentiment);
+
+  // Narrative
+  document.querySelector('#verdict-narrative').innerHTML = esc(data.narrative).replace(/\n/g, '<br>');
+
+  // Curated evidence
+  const cel = document.querySelector('#curated-evidence');
+  if (data.curatedEvidence && data.curatedEvidence.length) {
+    cel.innerHTML = data.curatedEvidence.map((e) => `
+      <div class="curated-item">
+        <p class="cq">${esc(e.quote)}</p>
+        <p class="cwhy">${esc(e.why)}</p>
+        <p class="csrc"><a href="${esc(e.source_url)}" target="_blank" rel="noreferrer">${esc(e.source_title)}</a> · ${esc(e.bot)}</p>
+      </div>
+    `).join('');
   } else {
-    winnerImg.parentElement.style.display = 'none';
+    cel.innerHTML = '';
   }
 
-  verdictSummary.innerHTML = formatSummary(data.summary);
-
-  llmNote.textContent = data.llm?.used
-    ? `Analysis by ${data.llm.model}`
-    : data.llm?.error
-      ? `LLM error: ${data.llm.error}`
-      : '';
+  // LLM note
+  const note = document.querySelector('#llm-note');
+  note.textContent = data.llm?.used
+    ? `Analysis by ${data.llm.model} · based on ${data.botA.totalRelevant + data.botB.totalRelevant} Reddit mentions`
+    : data.llm?.error ? `AI unavailable: ${data.llm.error}` : '';
 }
 
-function formatSummary(text) {
-  return esc(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/\n/g, '<br>');
+function renderMiniBars(selector, s) {
+  const total = Math.max(1, s.positive + s.negative);
+  document.querySelector(selector).innerHTML = `
+    <div class="mini-bar"><div class="mini-fill pos" style="width:${(s.positive / total) * 60}px"></div><span>${s.positive} pos</span></div>
+    <div class="mini-bar"><div class="mini-fill neg" style="width:${(s.negative / total) * 60}px"></div><span>${s.negative} neg</span></div>
+  `;
 }
 
-function renderComparison(data) {
-  comparison.hidden = false;
-  comparison.style.display = '';
-  fillBotCard('A', data.botA);
-  fillBotCard('B', data.botB);
-}
-
-function fillBotCard(side, bot) {
-  document.querySelector(`#name${side}`).textContent = bot.name;
-  document.querySelector(`#meta${side}`).textContent = `${bot.weapon} · ${bot.team}`;
-  document.querySelector(`#img${side}`).src = bot.image;
-  document.querySelector(`#img${side}`).alt = bot.name;
-  document.querySelector(`#relevant${side}`).textContent = `${bot.totalRelevant} relevant Reddit mentions found`;
-
-  const s = bot.sentiment;
-  const total = Math.max(1, s.positive + s.negative + s.neutral);
-  document.querySelector(`#bars${side}`).innerHTML = [
-    bar('Positive', s.positive, total, 'pos'),
-    bar('Negative', s.negative, total, 'neg'),
-    bar('Neutral', s.neutral, total, 'neu'),
-  ].join('');
-}
-
-function bar(label, count, total, cls) {
-  return `<div class="bar-row"><span>${label}</span><strong>${count}</strong><div class="bar-fill ${cls}" style="width:${(count / total) * 100}%"></div></div>`;
-}
-
-function renderEvidence(evidence) {
-  if (!evidence.length) { evidenceCard.hidden = true; return; }
-  evidenceCard.hidden = false;
-  evidenceEl.innerHTML = evidence.map((e, i) => {
+// ── All evidence (collapsible) ──
+function renderAllEvidence(evidence) {
+  if (!evidence || !evidence.length) { allEvidenceEl.hidden = true; return; }
+  allEvidenceEl.hidden = false;
+  document.querySelector('#evidence-count').textContent = evidence.length;
+  document.querySelector('#evidence-list').innerHTML = evidence.map((e) => {
     const cls = e.sentiment > 0 ? 'pos' : e.sentiment < 0 ? 'neg' : 'neu';
     const label = e.sentiment > 0 ? '+' + e.sentiment : e.sentiment < 0 ? String(e.sentiment) : '0';
-    return `
-      <div class="evidence-item">
-        <div class="meta">
-          <span class="badge ${cls}">${label}</span>
-          <span><strong>${esc(e.bot)}</strong> · [${i + 1}]</span>
-        </div>
-        <h3><a href="${esc(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a></h3>
-        <p>${esc(e.description)}</p>
-      </div>`;
+    return `<div class="ev-row">
+      <span class="ev-badge ${cls}">${label}</span>
+      <div><a href="${esc(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a><br><span class="ev-desc">${esc(e.description?.slice(0, 150))}</span></div>
+    </div>`;
   }).join('');
 }
 
+// ── Trace ──
 function renderTrace(trace) {
+  if (!trace || !trace.length) return;
   traceDetails.hidden = false;
-  traceBody.innerHTML = trace.map((t) => `
-    <tr>
-      <td>${esc(t.query)}</td>
-      <td class="${t.ok ? 'ok' : 'fail'}">${t.ok ? t.statusCode : 'FAIL'}</td>
-      <td>${t.resultCount}</td>
-      <td>${t.durationMs ? `${t.durationMs}ms` : '—'}</td>
-    </tr>`).join('');
+  document.querySelector('#trace-body').innerHTML = trace.map((t) => `
+    <tr><td>${esc(t.query)}</td><td class="${t.ok ? 'ok' : 'fail'}">${t.ok ? t.statusCode : 'FAIL'}</td><td>${t.resultCount}</td><td>${t.durationMs ? t.durationMs + 'ms' : '—'}</td></tr>
+  `).join('');
 }
 
-function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
-
 function esc(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

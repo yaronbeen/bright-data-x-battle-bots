@@ -1,28 +1,52 @@
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
-import { predict, ROSTER } from './copilot.js';
+import { predict, ROSTER, SUGGESTED_MATCHUPS } from './copilot.js';
 
 const publicDir = new URL('../public/', import.meta.url).pathname;
 const port = Number(process.env.PORT || 3000);
 
+const llmOptions = () => ({
+  apiToken: process.env.BRIGHT_DATA_API_TOKEN,
+  zone: process.env.BRIGHT_DATA_SERP_ZONE,
+  llmApiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
+  llmModel: process.env.LLM_MODEL,
+  llmBaseUrl: process.env.LLM_BASE_URL || undefined,
+});
+
 export function createApp() {
   return createServer(async (req, res) => {
-    // API: get bot roster
+    // API: roster + suggested matchups
     if (req.method === 'GET' && req.url === '/api/roster') {
-      return json(res, 200, { ok: true, roster: ROSTER });
+      return json(res, 200, { ok: true, roster: ROSTER, suggested: SUGGESTED_MATCHUPS });
     }
 
-    // API: head-to-head prediction
+    // API: streaming prediction (NDJSON)
+    if (req.method === 'POST' && req.url === '/api/predict-stream') {
+      const body = await readBody(req);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+
+      const emit = (event) => {
+        res.write(JSON.stringify(event) + '\n');
+      };
+
+      try {
+        await predict(body.botA, body.botB, llmOptions(), emit);
+      } catch (err) {
+        emit({ type: 'error', error: err.message });
+      }
+      res.end();
+      return;
+    }
+
+    // API: non-streaming prediction (backward compat)
     if (req.method === 'POST' && req.url === '/api/predict') {
       const body = await readBody(req);
-      const result = await predict(body.botA, body.botB, {
-        apiToken: process.env.BRIGHT_DATA_API_TOKEN,
-        zone: process.env.BRIGHT_DATA_SERP_ZONE,
-        llmApiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
-        llmModel: process.env.LLM_MODEL,
-        llmBaseUrl: process.env.LLM_BASE_URL || undefined,
-      });
+      const result = await predict(body.botA, body.botB, llmOptions());
       return json(res, result.statusCode || 200, result);
     }
 
@@ -67,7 +91,6 @@ function mime(path) {
   if (ext === '.js') return 'text/javascript; charset=utf-8';
   if (ext === '.png') return 'image/png';
   if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
-  if (ext === '.svg') return 'image/svg+xml';
   return 'text/html; charset=utf-8';
 }
 
