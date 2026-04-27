@@ -30,9 +30,10 @@ fetch('/api/roster').then((r) => r.json()).then((data) => {
   updatePreview('A'); updatePreview('B');
 
   if (data.suggested) {
-    suggestionsEl.innerHTML = data.suggested.map((s) =>
-      `<button type="button" class="suggestion" data-a="${s.a}" data-b="${s.b}">${s.label}</button>`
-    ).join('');
+    suggestionsEl.innerHTML = '<span class="suggestions-label">Try a matchup</span>' +
+      data.suggested.map((s) =>
+        `<button type="button" class="suggestion" data-a="${s.a}" data-b="${s.b}">${s.label}</button>`
+      ).join('');
     suggestionsEl.addEventListener('click', (e) => {
       const b = e.target.closest('.suggestion');
       if (!b) return;
@@ -275,7 +276,7 @@ function renderAllEvidence(evidence) {
     const label = e.sentiment > 0 ? '+' + e.sentiment : e.sentiment < 0 ? String(e.sentiment) : '0';
     return `<div class="ev-row">
       <span class="ev-badge ${cls}">${label}</span>
-      <div><a href="${sanitizeUrl(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a><br><span class="ev-desc">${esc(e.description?.slice(0,150))}</span></div>
+      <div><a href="${sanitizeUrl(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a><br><span class="ev-desc">${esc(cleanDesc(e.description?.slice(0,150)))}</span></div>
     </div>`;
   }).join('');
 }
@@ -294,6 +295,18 @@ function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/** Strip SERP "Read more" / "...Read mor" artifacts from descriptions */
+function cleanDesc(s) {
+  return String(s || '')
+    .replace(/\.?Read more$/i, '')
+    .replace(/\.?Read mor$/i, '')
+    .replace(/\.?Read mo$/i, '')
+    .replace(/\.?Read m$/i, '')
+    .replace(/\.?Re$/, '')
+    .replace(/\.?Rea$/, '')
+    .trim();
 }
 
 function sanitizeUrl(url) {
