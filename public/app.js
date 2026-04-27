@@ -6,16 +6,19 @@ const metaA = document.querySelector('#pickerMetaA');
 const metaB = document.querySelector('#pickerMetaB');
 const btn = document.querySelector('#btn');
 const form = document.querySelector('#matchup');
+const vsBadge = document.querySelector('#vs-badge');
 const suggestionsEl = document.querySelector('#suggestions');
 const statusBar = document.querySelector('#status-bar');
 const statusText = document.querySelector('#status-text');
+const earlySentiment = document.querySelector('#early-sentiment');
 const verdictCard = document.querySelector('#verdict-card');
 const allEvidenceEl = document.querySelector('#all-evidence');
 const traceDetails = document.querySelector('#trace-details');
 
 let roster = [];
+let pendingResult = null; // holds full result while drumroll plays
 
-// ── Load roster + render suggested matchups ──
+// ── Load roster ──
 fetch('/api/roster').then((r) => r.json()).then((data) => {
   if (!data.ok) return;
   roster = data.roster;
@@ -26,23 +29,22 @@ fetch('/api/roster').then((r) => r.json()).then((data) => {
   botBSelect.value = 'tombstone';
   updatePreview('A'); updatePreview('B');
 
-  // Suggested matchups
   if (data.suggested) {
     suggestionsEl.innerHTML = data.suggested.map((s) =>
       `<button type="button" class="suggestion" data-a="${s.a}" data-b="${s.b}">${s.label}</button>`
     ).join('');
     suggestionsEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('.suggestion');
-      if (!btn) return;
-      botASelect.value = btn.dataset.a;
-      botBSelect.value = btn.dataset.b;
+      const b = e.target.closest('.suggestion');
+      if (!b) return;
+      botASelect.value = b.dataset.a;
+      botBSelect.value = b.dataset.b;
       updatePreview('A'); updatePreview('B');
       form.requestSubmit();
     });
   }
 });
 
-// ── Live photo previews on dropdown change ──
+// ── Crossfade bot previews on dropdown change ──
 botASelect.addEventListener('change', () => updatePreview('A'));
 botBSelect.addEventListener('change', () => updatePreview('B'));
 
@@ -51,28 +53,39 @@ function updatePreview(side) {
   const img = side === 'A' ? previewA : previewB;
   const meta = side === 'A' ? metaA : metaB;
   const bot = roster.find((b) => b.id === select.value);
-  if (bot) {
+  if (!bot) { img.src = ''; meta.textContent = ''; return; }
+
+  // Crossfade: fade out, swap, fade in
+  img.classList.add('swapping');
+  setTimeout(() => {
     img.src = bot.image; img.alt = bot.name;
     meta.textContent = `${bot.weapon} · ${bot.team}`;
-  } else {
-    img.src = ''; img.alt = ''; meta.textContent = '';
-  }
+    img.classList.remove('swapping');
+  }, 200);
 }
 
-// ── Main submit → streaming prediction ──
+// ── Submit → streaming ──
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  if (!botASelect.value || !botBSelect.value) return;
+  const a = botASelect.value, b = botBSelect.value;
+  if (!a || !b) return;
+  if (a === b) { alert('Pick two different bots!'); return; }
 
+  // Reset everything
   btn.disabled = true; btn.textContent = 'Analyzing…';
-  verdictCard.hidden = true; allEvidenceEl.hidden = true; traceDetails.hidden = true;
-    statusBar.hidden = false; statusBar.style.display = ''; statusText.textContent = 'Querying Bright Data SERP API…';
+  verdictCard.hidden = true; verdictCard.classList.remove('reveal');
+  allEvidenceEl.hidden = true; traceDetails.hidden = true;
+  earlySentiment.hidden = true; earlySentiment.style.display = 'none';
+  statusBar.hidden = false; statusBar.style.display = '';
+  statusText.textContent = 'Querying Bright Data SERP API…';
+  vsBadge.classList.add('active');
+  pendingResult = null;
 
   try {
     const res = await fetch('/api/predict-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ botA: botASelect.value, botB: botBSelect.value }),
+      body: JSON.stringify({ botA: a, botB: b }),
     });
 
     const reader = res.body.getReader();
@@ -83,68 +96,143 @@ form.addEventListener('submit', async (e) => {
       const { done, value } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-
-      // Process complete NDJSON lines
       const lines = buffer.split('\n');
-      buffer = lines.pop(); // keep incomplete line in buffer
+      buffer = lines.pop();
       for (const line of lines) {
         if (!line.trim()) continue;
-        try {
-          const event = JSON.parse(line);
-          handleStreamEvent(event);
-        } catch { /* skip bad lines */ }
+        try { handleEvent(JSON.parse(line)); } catch {}
       }
     }
   } catch (err) {
     statusText.textContent = `Error: ${err.message}`;
   } finally {
     btn.disabled = false; btn.textContent = 'Who wins?';
+    vsBadge.classList.remove('active');
   }
 });
 
-function handleStreamEvent(event) {
-  switch (event.type) {
+// ── Stream event handler ──
+function handleEvent(ev) {
+  switch (ev.type) {
     case 'start':
-      statusText.textContent = `Searching Reddit for ${event.botA.name} vs ${event.botB.name}…`;
+      statusText.textContent = `Searching Reddit for ${ev.botA.name} vs ${ev.botB.name}…`;
       break;
 
-    case 'serp_done':
-      const total = [...event.traceA, ...event.traceB].reduce((n, t) => n + (t.resultCount || 0), 0);
+    case 'serp_done': {
+      const total = [...ev.traceA, ...ev.traceB].reduce((n, t) => n + (t.resultCount || 0), 0);
       statusText.textContent = `Found ${total} Reddit results. Scoring sentiment…`;
       break;
+    }
 
     case 'sentiment':
-      statusText.textContent = `Sentiment scored. Generating AI verdict…`;
-      // Could show early sentiment bars here in the future
+      statusText.textContent = 'Sentiment scored. Generating AI verdict…';
+      showEarlySentiment(ev);
       break;
 
     case 'done':
       statusBar.hidden = true; statusBar.style.display = 'none';
-      renderVerdict(event.result);
-      renderAllEvidence(event.result.allEvidence);
-      renderTrace(event.result.trace);
+      revealVerdict(ev.result);
       break;
 
     case 'error':
-      statusText.textContent = `Error: ${event.error}`;
+      statusText.textContent = `Error: ${ev.error}`;
       break;
   }
 }
 
-// ── Render verdict card ──
-function renderVerdict(data) {
-  verdictCard.hidden = false;
+// ── Progressive: show sentiment BEFORE LLM finishes ──
+function showEarlySentiment(ev) {
+  earlySentiment.hidden = false;
+  earlySentiment.style.display = '';
+  earlySentiment.innerHTML = `
+    <div class="early-bot">
+      <img src="${esc(ev.botA.image)}" alt="${esc(ev.botA.name)}" width="80" height="80" />
+      <strong>${esc(ev.botA.name)}</strong>
+      ${miniBar(ev.botA.sentiment)}
+    </div>
+    <div class="early-divider">
+      <div class="vs-text">VS</div>
+      <div class="waiting">AI analyzing…</div>
+    </div>
+    <div class="early-bot">
+      <img src="${esc(ev.botB.image)}" alt="${esc(ev.botB.name)}" width="80" height="80" />
+      <strong>${esc(ev.botB.name)}</strong>
+      ${miniBar(ev.botB.sentiment)}
+    </div>
+  `;
+}
 
-  // Top section: both bots + winner
-  document.querySelector('#v-imgA').src = data.botA.image;
+function miniBar(s) {
+  const t = Math.max(1, s.positive + s.negative);
+  return `<div class="mini-bars">
+    <div class="mini-bar"><div class="mini-fill pos" style="width:${(s.positive/t)*50}px"></div><span>${s.positive} pos</span></div>
+    <div class="mini-bar"><div class="mini-fill neg" style="width:${(s.negative/t)*50}px"></div><span>${s.negative} neg</span></div>
+  </div>`;
+}
+
+// ── Dramatic verdict reveal ──
+async function revealVerdict(data) {
+  // Hide early sentiment with a brief overlap
+  earlySentiment.hidden = true; earlySentiment.style.display = 'none';
+
+  // Build the card content (hidden)
+  buildVerdictCard(data);
+  verdictCard.hidden = false;
+  verdictCard.classList.add('reveal');
+
+  // Staggered reveal sequence
+  await delay(400);  // card slides in
+
+  // Winner name pop
+  const winnerEl = document.querySelector('#verdict-winner');
+  winnerEl.classList.add('show');
+  await delay(500);
+
+  // Confidence badge
+  document.querySelector('#verdict-confidence').classList.add('show');
+  await delay(300);
+
+  // Narrative fade in
+  document.querySelector('#verdict-narrative').classList.add('show');
+  await delay(400);
+
+  // Curated evidence staggered
+  const items = document.querySelectorAll('.curated-item');
+  for (let i = 0; i < items.length; i++) {
+    items[i].classList.add('show');
+    await delay(150);
+  }
+
+  // Below the fold
+  renderAllEvidence(data.allEvidence);
+  renderTrace(data.trace);
+}
+
+function buildVerdictCard(data) {
+  // Reset animation classes
+  document.querySelector('#verdict-winner').classList.remove('show');
+  document.querySelector('#verdict-confidence').classList.remove('show');
+  document.querySelector('#verdict-narrative').classList.remove('show');
+
+  // Bot images + names
+  const imgA = document.querySelector('#v-imgA');
+  const imgB = document.querySelector('#v-imgB');
+  imgA.src = data.botA.image; imgA.alt = data.botA.name;
+  imgB.src = data.botB.image; imgB.alt = data.botB.name;
   document.querySelector('#v-nameA').textContent = data.botA.name;
-  document.querySelector('#v-imgB').src = data.botB.image;
   document.querySelector('#v-nameB').textContent = data.botB.name;
 
+  // Highlight winner bot
+  const botAEl = document.querySelector('#vbot-a');
+  const botBEl = document.querySelector('#vbot-b');
+  botAEl.classList.toggle('winner', data.verdict.winnerId === data.botA.id);
+  botBEl.classList.toggle('winner', data.verdict.winnerId === data.botB.id);
+
+  // Winner text
   document.querySelector('#verdict-winner').textContent = data.verdict.winner;
   document.querySelector('#verdict-confidence').textContent = data.verdict.confidence;
 
-  // Mini sentiment bars
+  // Sentiment bars
   renderMiniBars('#v-barsA', data.botA.sentiment);
   renderMiniBars('#v-barsB', data.botB.sentiment);
 
@@ -153,36 +241,33 @@ function renderVerdict(data) {
 
   // Curated evidence
   const cel = document.querySelector('#curated-evidence');
-  if (data.curatedEvidence && data.curatedEvidence.length) {
+  if (data.curatedEvidence?.length) {
     cel.innerHTML = data.curatedEvidence.map((e) => `
       <div class="curated-item">
         <p class="cq">${esc(e.quote)}</p>
         <p class="cwhy">${esc(e.why)}</p>
-        <p class="csrc"><a href="${esc(e.source_url)}" target="_blank" rel="noreferrer">${esc(e.source_title)}</a> · ${esc(e.bot)}</p>
-      </div>
-    `).join('');
+        <p class="csrc"><a href="${sanitizeUrl(e.source_url)}" target="_blank" rel="noreferrer">${esc(e.source_title)}</a> · ${esc(e.bot)}</p>
+      </div>`).join('');
   } else {
     cel.innerHTML = '';
   }
 
   // LLM note
-  const note = document.querySelector('#llm-note');
-  note.textContent = data.llm?.used
+  document.querySelector('#llm-note').textContent = data.llm?.used
     ? `Analysis by ${data.llm.model} · based on ${data.botA.totalRelevant + data.botB.totalRelevant} Reddit mentions`
     : data.llm?.error ? `AI unavailable: ${data.llm.error}` : '';
 }
 
-function renderMiniBars(selector, s) {
-  const total = Math.max(1, s.positive + s.negative);
-  document.querySelector(selector).innerHTML = `
-    <div class="mini-bar"><div class="mini-fill pos" style="width:${(s.positive / total) * 60}px"></div><span>${s.positive} pos</span></div>
-    <div class="mini-bar"><div class="mini-fill neg" style="width:${(s.negative / total) * 60}px"></div><span>${s.negative} neg</span></div>
-  `;
+function renderMiniBars(sel, s) {
+  const t = Math.max(1, s.positive + s.negative);
+  document.querySelector(sel).innerHTML = `
+    <div class="mini-bar"><div class="mini-fill pos" style="width:${(s.positive/t)*60}px"></div><span>${s.positive} pos</span></div>
+    <div class="mini-bar"><div class="mini-fill neg" style="width:${(s.negative/t)*60}px"></div><span>${s.negative} neg</span></div>`;
 }
 
 // ── All evidence (collapsible) ──
 function renderAllEvidence(evidence) {
-  if (!evidence || !evidence.length) { allEvidenceEl.hidden = true; return; }
+  if (!evidence?.length) { allEvidenceEl.hidden = true; return; }
   allEvidenceEl.hidden = false;
   document.querySelector('#evidence-count').textContent = evidence.length;
   document.querySelector('#evidence-list').innerHTML = evidence.map((e) => {
@@ -190,20 +275,28 @@ function renderAllEvidence(evidence) {
     const label = e.sentiment > 0 ? '+' + e.sentiment : e.sentiment < 0 ? String(e.sentiment) : '0';
     return `<div class="ev-row">
       <span class="ev-badge ${cls}">${label}</span>
-      <div><a href="${esc(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a><br><span class="ev-desc">${esc(e.description?.slice(0, 150))}</span></div>
+      <div><a href="${sanitizeUrl(e.url)}" target="_blank" rel="noreferrer">${esc(e.title)}</a><br><span class="ev-desc">${esc(e.description?.slice(0,150))}</span></div>
     </div>`;
   }).join('');
 }
 
 // ── Trace ──
 function renderTrace(trace) {
-  if (!trace || !trace.length) return;
+  if (!trace?.length) return;
   traceDetails.hidden = false;
-  document.querySelector('#trace-body').innerHTML = trace.map((t) => `
-    <tr><td>${esc(t.query)}</td><td class="${t.ok ? 'ok' : 'fail'}">${t.ok ? t.statusCode : 'FAIL'}</td><td>${t.resultCount}</td><td>${t.durationMs ? t.durationMs + 'ms' : '—'}</td></tr>
-  `).join('');
+  document.querySelector('#trace-body').innerHTML = trace.map((t) =>
+    `<tr><td>${esc(t.query)}</td><td class="${t.ok?'ok':'fail'}">${t.ok?t.statusCode:'FAIL'}</td><td>${t.resultCount}</td><td>${t.durationMs?t.durationMs+'ms':'—'}</td></tr>`
+  ).join('');
 }
 
+// ── Helpers ──
+function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
+
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sanitizeUrl(url) {
+  const s = esc(url || '');
+  return s.startsWith('http') ? s : '#';
 }

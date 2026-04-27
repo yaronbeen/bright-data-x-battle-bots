@@ -13,17 +13,16 @@
         <h1>Who does Reddit think wins?</h1>
       </header>
 
-      <!-- Bot selector with live photo previews -->
       <form id="matchup">
         <div class="selector-vs">
           <div class="bot-picker" id="pickerA">
-            <img id="previewA" class="bot-preview" src="/img/minotaur.png" alt="Minotaur" />
+            <img id="previewA" class="bot-preview" src="/img/minotaur.png" alt="Minotaur" width="120" height="120" />
             <select id="botA"><option value="">Loading…</option></select>
             <p class="picker-meta" id="pickerMetaA">Drum spinner · RioBotz</p>
           </div>
-          <span class="vs-badge">VS</span>
+          <span class="vs-badge" id="vs-badge">VS</span>
           <div class="bot-picker" id="pickerB">
-            <img id="previewB" class="bot-preview" src="/img/tombstone.png" alt="Tombstone" />
+            <img id="previewB" class="bot-preview" src="/img/tombstone.png" alt="Tombstone" width="120" height="120" />
             <select id="botB"><option value="">Loading…</option></select>
             <p class="picker-meta" id="pickerMetaB">Horizontal spinner · Hardcore Robotics</p>
           </div>
@@ -31,20 +30,22 @@
         <button type="submit" id="btn">Who wins?</button>
       </form>
 
-      <!-- Suggested matchups -->
       <div id="suggestions" class="suggestions"></div>
 
-      <!-- Streaming status -->
-      <section id="status-bar" class="status-bar" hidden style="display:none">
+      <!-- Status bar -->
+      <section id="status-bar" class="status-bar" hidden style="display:none" role="status" aria-live="polite">
         <div class="status-dot"></div>
         <span id="status-text">Starting analysis…</span>
       </section>
 
-      <!-- Verdict card (the screenshot-worthy artifact) -->
+      <!-- Early sentiment (shows BEFORE LLM finishes) -->
+      <section id="early-sentiment" class="early-sentiment" hidden style="display:none"></section>
+
+      <!-- Verdict card -->
       <section id="verdict-card" class="verdict-card" hidden>
         <div class="verdict-top">
-          <div class="verdict-bot">
-            <img id="v-imgA" src="" alt="" />
+          <div class="verdict-bot" id="vbot-a">
+            <img id="v-imgA" src="" alt="" width="100" height="100" />
             <strong id="v-nameA"></strong>
             <div id="v-barsA" class="mini-bars"></div>
           </div>
@@ -53,8 +54,8 @@
             <h2 id="verdict-winner"></h2>
             <span id="verdict-confidence" class="conf-badge"></span>
           </div>
-          <div class="verdict-bot">
-            <img id="v-imgB" src="" alt="" />
+          <div class="verdict-bot" id="vbot-b">
+            <img id="v-imgB" src="" alt="" width="100" height="100" />
             <strong id="v-nameB"></strong>
             <div id="v-barsB" class="mini-bars"></div>
           </div>
@@ -62,15 +63,14 @@
         <div id="verdict-narrative" class="verdict-narrative"></div>
         <div id="curated-evidence" class="curated-evidence"></div>
         <p id="llm-note" class="llm-note"></p>
+        <div class="verdict-brand">Analyzed with <a href="https://brightdata.com" target="_blank" rel="noreferrer">Bright Data</a> SERP API</div>
       </section>
 
-      <!-- Below the fold: collapsible full evidence -->
       <details id="all-evidence" class="all-evidence" hidden>
         <summary>All Reddit mentions (<span id="evidence-count">0</span>)</summary>
         <div id="evidence-list" class="evidence-list"></div>
       </details>
 
-      <!-- Dev trace -->
       <details id="trace-details" hidden>
         <summary class="trace-toggle">Bright Data SERP trace</summary>
         <table><thead><tr><th>Query</th><th>Status</th><th>Results</th><th>Time</th></tr></thead><tbody id="trace-body"></tbody></table>
