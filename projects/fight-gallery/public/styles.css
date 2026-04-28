@@ -59,8 +59,8 @@ img { display: block; max-width: 100%; }
   color: #64748b;
   transition: color 0.15s;
 }
-.nav-powered:hover { color: #2563eb; }
-.nav-powered strong { color: #2563eb; font-weight: 600; }
+.nav-powered:hover { color: #f97316; }
+.nav-powered strong { color: #f97316; font-weight: 600; }
 
 /* ===== Hero ===== */
 .hero {
@@ -151,9 +151,9 @@ img { display: block; max-width: 100%; }
   background: #f8fafc;
 }
 .pill.active {
-  background: #2563eb;
+  background: #f97316;
   color: #fff;
-  border-color: #2563eb;
+  border-color: #f97316;
 }
 .filter-dropdowns {
   display: flex;
@@ -183,7 +183,7 @@ img { display: block; max-width: 100%; }
   transition: border-color 0.15s;
 }
 .filter-select:hover { border-color: #cbd5e1; }
-.filter-select:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+.filter-select:focus { outline: none; border-color: #f97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.1); }
 .filter-count {
   margin-top: 12px;
   font-size: 13px;
@@ -458,10 +458,10 @@ img { display: block; max-width: 100%; }
 .lightbox-link {
   font-size: 13px;
   font-weight: 500;
-  color: #2563eb;
+  color: #f97316;
   transition: color 0.15s;
 }
-.lightbox-link:hover { color: #1d4ed8; }
+.lightbox-link:hover { color: #ea580c; }
 
 /* ===== Footer ===== */
 .footer {
@@ -477,7 +477,7 @@ img { display: block; max-width: 100%; }
   font-size: 14px;
   color: #64748b;
 }
-.footer strong { color: #2563eb; }
+.footer strong { color: #f97316; }
 .footer-sub {
   margin-top: 6px;
   font-size: 12px;

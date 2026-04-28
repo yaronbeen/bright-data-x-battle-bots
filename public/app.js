@@ -59,7 +59,7 @@ function updatePreview(side) {
   // Crossfade: fade out, swap, fade in
   img.classList.add('swapping');
   setTimeout(() => {
-    img.src = bot.image; img.alt = bot.name;
+    img.src = botImg(bot); img.alt = bot.name;
     meta.textContent = `${bot.weapon} · ${bot.team}`;
     img.classList.remove('swapping');
   }, 200);
@@ -147,7 +147,7 @@ function showEarlySentiment(ev) {
   earlySentiment.style.display = '';
   earlySentiment.innerHTML = `
     <div class="early-bot">
-      <img src="${esc(ev.botA.image)}" alt="${esc(ev.botA.name)}" width="80" height="80" />
+      <img src="${ev.botA.image || PLACEHOLDER_IMG}" alt="${esc(ev.botA.name)}" width="80" height="80" />
       <strong>${esc(ev.botA.name)}</strong>
       ${miniBar(ev.botA.sentiment)}
     </div>
@@ -156,7 +156,7 @@ function showEarlySentiment(ev) {
       <div class="waiting">AI analyzing…</div>
     </div>
     <div class="early-bot">
-      <img src="${esc(ev.botB.image)}" alt="${esc(ev.botB.name)}" width="80" height="80" />
+      <img src="${ev.botB.image || PLACEHOLDER_IMG}" alt="${esc(ev.botB.name)}" width="80" height="80" />
       <strong>${esc(ev.botB.name)}</strong>
       ${miniBar(ev.botB.sentiment)}
     </div>
@@ -218,8 +218,8 @@ function buildVerdictCard(data) {
   // Bot images + names
   const imgA = document.querySelector('#v-imgA');
   const imgB = document.querySelector('#v-imgB');
-  imgA.src = data.botA.image; imgA.alt = data.botA.name;
-  imgB.src = data.botB.image; imgB.alt = data.botB.name;
+  imgA.src = data.botA.image || PLACEHOLDER_IMG; imgA.alt = data.botA.name;
+  imgB.src = data.botB.image || PLACEHOLDER_IMG; imgB.alt = data.botB.name;
   document.querySelector('#v-nameA').textContent = data.botA.name;
   document.querySelector('#v-nameB').textContent = data.botB.name;
 
@@ -312,4 +312,30 @@ function cleanDesc(s) {
 function sanitizeUrl(url) {
   const s = esc(url || '');
   return s.startsWith('http') ? s : '#';
+}
+
+/** Fallback for bots without images — inline data URI since server doesn't serve SVG mime type */
+const PLACEHOLDER_IMG = `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><rect width="120" height="120" rx="12" fill="%231a1a1a"/><circle cx="60" cy="45" r="18" stroke="%23555" stroke-width="2.5" fill="none"/><rect x="38" y="68" width="44" height="28" rx="6" stroke="%23555" stroke-width="2.5" fill="none"/><circle cx="50" cy="40" r="3" fill="%23555"/><circle cx="70" cy="40" r="3" fill="%23555"/><line x1="52" y1="52" x2="68" y2="52" stroke="%23555" stroke-width="2" stroke-linecap="round"/><text x="60" y="110" text-anchor="middle" fill="%23444" font-family="sans-serif" font-size="9" font-weight="700">NO IMAGE</text></svg>')}`;
+
+function botImg(bot) {
+  return bot.image || PLACEHOLDER_IMG;
+}
+
+// ── Share button ──
+document.querySelector('#share-btn').addEventListener('click', async () => {
+  const a = botASelect.value, b = botBSelect.value;
+  const url = `${location.origin}${location.pathname}?a=${a}&b=${b}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast('Link copied!');
+  } catch {
+    showToast('Could not copy link');
+  }
+});
+
+function showToast(msg) {
+  const el = document.querySelector('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2000);
 }

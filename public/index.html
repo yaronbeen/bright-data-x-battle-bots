@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>BattleBots Head-to-Head — Who Does Reddit Think Wins?</title>
+    <title>BattleBots H2H Predictor — Reddit-Powered Head-to-Head Analysis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -12,7 +12,7 @@
   <body>
     <nav>
       <div class="nav-inner">
-        <div class="logo"><span class="logo-icon">🤖</span> BattleBots <strong>Hub</strong></div>
+        <div class="logo"><span class="logo-icon">🤖</span> BattleBots <strong>H2H</strong></div>
         <div class="nav-meta">Powered by Bright Data</div>
       </div>
     </nav>
@@ -72,6 +72,7 @@
         </div>
         <div id="verdict-narrative" class="verdict-narrative"></div>
         <div id="curated-evidence" class="curated-evidence"></div>
+        <button type="button" id="share-btn" class="share-btn">📋 Share this matchup</button>
         <p id="llm-note" class="llm-note"></p>
         <div class="verdict-brand">Analyzed with <a href="https://brightdata.com" target="_blank" rel="noreferrer">Bright Data</a> SERP API</div>
       </section>
@@ -88,6 +89,7 @@
 
       <footer>Powered by <a href="https://brightdata.com" target="_blank" rel="noreferrer">Bright Data</a></footer>
     </main>
+    <div id="toast" class="toast"></div>
     <script src="/app.js" type="module"></script>
   </body>
 </html>

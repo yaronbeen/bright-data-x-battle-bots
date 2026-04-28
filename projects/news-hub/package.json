@@ -5,7 +5,8 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node src/server.js"
+    "dev": "node src/server.js",
+    "scrape": "node scripts/scrape.js"
   },
   "keywords": ["battlebots", "news", "bright-data", "crawl-api"],
   "license": "MIT"

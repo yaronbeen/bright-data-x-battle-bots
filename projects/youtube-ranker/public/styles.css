@@ -9,8 +9,9 @@
 
 :root {
   --bg: #fcfcfd;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
+  --accent: #ef4444;
+  --accent-hover: #dc2626;
+  --accent-light: #fee2e2;
   --purple: #7c3aed;
   --purple-bg: #ede8ff;
   --text: #111827;
@@ -264,7 +265,7 @@ a {
 
 .search-input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 /* ── Table ── */

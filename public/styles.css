@@ -1,6 +1,6 @@
 :root {
-  --bg: #fcfcfd; --fg: #1e1b4b; --border: #e5e7eb; --accent: #2563eb;
-  --accent-purple: #7c3aed; --accent-purple-light: #ede8ff;
+  --bg: #fcfcfd; --fg: #1e1b4b; --border: #e5e7eb; --accent: #dc2626;
+  --accent-secondary: #991b1b; --accent-light: #fee2e2;
   --pos: #22c55e; --neg: #ef4444; --neu: #a3a3a3; --card: #fff;
   font-family: 'Inter', system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg);
 }
@@ -18,7 +18,7 @@ nav {
   display: flex; align-items: center; justify-content: space-between;
 }
 .logo { font-size: 1.05rem; font-weight: 600; color: var(--fg); text-decoration: none; }
-.logo strong { color: var(--accent-purple); }
+.logo strong { color: var(--accent-secondary); }
 .logo-icon { font-size: 1.2rem; }
 .nav-meta { font-size: .72rem; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
 
@@ -27,7 +27,7 @@ main { max-width: 880px; margin: 0 auto; padding: 36px 20px 80px; }
 /* ── Header ── */
 .eyebrow {
   display: inline-block; padding: 4px 14px; border-radius: 999px;
-  background: var(--accent-purple-light); color: var(--accent-purple);
+  background: var(--accent-light); color: var(--accent-secondary);
   font-size: .75rem; font-weight: 700; margin: 0 0 12px;
   text-transform: uppercase; letter-spacing: .08em;
 }
@@ -76,11 +76,11 @@ form { margin-bottom: 20px; }
 button {
   width: 100%; font: inherit; font-weight: 800; font-size: 1.05rem; padding: 14px;
   border: none; border-radius: 12px; background: var(--accent); color: #fff;
-  cursor: pointer; box-shadow: 0 1px 3px rgba(37,99,235,.2);
+  cursor: pointer; box-shadow: 0 1px 3px rgba(220,38,38,.2);
   transition: transform 80ms, box-shadow .2s, background .2s;
 }
-button:hover { background: #1d4ed8; box-shadow: 0 4px 12px rgba(37,99,235,.25); }
-button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(37,99,235,.15); }
+button:hover { background: #b91c1c; box-shadow: 0 4px 12px rgba(220,38,38,.25); }
+button:active { transform: translateY(1px); box-shadow: 0 1px 2px rgba(220,38,38,.15); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 
 /* ── Suggested matchups (subtle, horizontal chips) ── */
@@ -102,6 +102,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .suggestion:nth-child(3) { animation-delay: .15s; }
 .suggestion:nth-child(4) { animation-delay: .2s; }
 .suggestion:nth-child(5) { animation-delay: .25s; }
+.suggestion:nth-child(6) { animation-delay: .3s; }
+.suggestion:nth-child(7) { animation-delay: .35s; }
 @keyframes pill-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .suggestion:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 .suggestion:active { transform: scale(.96); }
@@ -109,7 +111,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 /* ── Status bar ── */
 .status-bar {
   display: flex; align-items: center; gap: 10px; padding: 14px 18px;
-  border: 1px solid var(--border); border-radius: 12px; background: #eff6ff;
+  border: 1px solid var(--border); border-radius: 12px; background: var(--accent-light);
   font-weight: 700; font-size: .9rem; margin-bottom: 16px; color: var(--accent);
   box-shadow: 0 1px 3px rgba(0,0,0,.06);
   animation: status-in .3s ease;
@@ -245,6 +247,26 @@ table { width: 100%; border-collapse: collapse; font-size: .78rem; margin-top: 8
 th { text-align: left; padding: 4px 6px; border-bottom: 2px solid var(--border); font-weight: 800; }
 td { padding: 4px 6px; border-bottom: 1px solid #eee; word-break: break-word; }
 .ok { color: var(--pos); font-weight: 700; } .fail { color: var(--neg); font-weight: 700; }
+
+/* ── Share button ── */
+.share-btn {
+  width: auto; display: inline-flex; align-items: center; gap: 6px;
+  margin: 4px 24px 14px; padding: 8px 18px; font-size: .82rem; font-weight: 700;
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  cursor: pointer; transition: background .2s, transform 80ms;
+}
+.share-btn:hover { background: #b91c1c; }
+.share-btn:active { transform: translateY(1px); }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: #111; color: #fff; padding: 10px 20px; border-radius: 10px;
+  font-size: .85rem; font-weight: 700; z-index: 9999;
+  opacity: 0; transition: opacity .3s, transform .3s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ── Footer ── */
 footer {

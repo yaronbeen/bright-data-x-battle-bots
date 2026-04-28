@@ -87,11 +87,12 @@ a {
 
 .nav-badge {
   font-size: 12px;
-  font-weight: 500;
-  color: var(--accent);
-  background: #eff6ff;
-  padding: 4px 10px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  padding: 5px 12px;
   border-radius: 20px;
+  letter-spacing: 0.01em;
 }
 
 /* ── Hero ────────────────────────────────────────── */
@@ -99,6 +100,7 @@ a {
   max-width: 800px;
   margin: 0 auto;
   padding: 48px 24px 32px;
+  background: linear-gradient(180deg, #eff6ff 0%, #fcfcfd 100%);
 }
 
 .hero-badge {
@@ -128,6 +130,13 @@ a {
   color: var(--text-secondary);
   line-height: 1.5;
   max-width: 520px;
+}
+
+.hero-timestamp {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 
 /* ── Stats Bar ───────────────────────────────────── */

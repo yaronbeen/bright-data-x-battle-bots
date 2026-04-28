@@ -129,9 +129,11 @@ export async function predict(botAId, botBId, options = {}, onProgress) {
 /** Suggested matchups for the landing page */
 export const SUGGESTED_MATCHUPS = [
   { a: 'minotaur', b: 'tombstone', label: 'Minotaur vs Tombstone' },
-  { a: 'hydra', b: 'witch-doctor', label: 'Hydra vs Witch Doctor' },
-  { a: 'end-game', b: 'sawblaze', label: 'End Game vs SawBlaze' },
-  { a: 'bite-force', b: 'cobalt', label: 'Bite Force vs Cobalt' },
+  { a: 'hydra', b: 'tantrum', label: 'Hydra vs Tantrum' },
+  { a: 'end-game', b: 'riptide', label: 'End Game vs Riptide' },
+  { a: 'witch-doctor', b: 'copperhead', label: 'Witch Doctor vs Copperhead' },
+  { a: 'sawblaze', b: 'whiplash', label: 'SawBlaze vs Whiplash' },
+  { a: 'cobalt', b: 'uppercut', label: 'Cobalt vs Uppercut' },
 ];
 
 export { ROSTER };
