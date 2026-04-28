@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BattleBots YouTube Fight Ranker — Powered by Bright Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="/" class="nav-logo">
+          <span class="nav-logo-icon">🤖</span>
+          <span class="nav-logo-text">BattleBots Hub</span>
+        </a>
+        <span class="nav-divider"></span>
+        <span class="nav-page">YouTube Ranker</span>
+      </div>
+      <div class="nav-right">
+        <a href="https://brightdata.com" target="_blank" rel="noopener" class="nav-bright">
+          Powered by <strong>Bright Data</strong>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-badge">
+        <span class="hero-badge-icon">📺</span>
+        YouTube Scraper API
+      </div>
+      <h1 class="hero-title">Most Watched BattleBots Fights</h1>
+      <p class="hero-sub">
+        Every fight ranked by real YouTube metrics. Views, likes, comments — scraped and ranked so you don't have to.
+      </p>
+    </section>
+
+    <!-- Stats -->
+    <section class="stats-bar" id="stats-bar">
+      <div class="stat-card">
+        <span class="stat-value" id="stat-fights">—</span>
+        <span class="stat-label">Fights Analyzed</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="stat-views">—</span>
+        <span class="stat-label">Total Views</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-value" id="stat-bot">—</span>
+        <span class="stat-label">Most Popular Bot</span>
+      </div>
+    </section>
+
+    <!-- Controls -->
+    <section class="controls">
+      <div class="sort-buttons" id="sort-buttons">
+        <button class="sort-btn active" data-sort="views">Most Viewed</button>
+        <button class="sort-btn" data-sort="likes">Most Liked</button>
+        <button class="sort-btn" data-sort="comments">Most Commented</button>
+        <button class="sort-btn" data-sort="controversial">Most Controversial</button>
+      </div>
+      <div class="search-wrap">
+        <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" class="search-input" id="search-input" placeholder="Search by bot name...">
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="table-wrap">
+      <table class="fight-table" id="fight-table">
+        <thead>
+          <tr>
+            <th class="th-rank">#</th>
+            <th class="th-fight">Fight</th>
+            <th class="th-views">Views</th>
+            <th class="th-likes">Likes</th>
+            <th class="th-comments">Comments</th>
+            <th class="th-date">Uploaded</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <!-- rendered by app.js -->
+        </tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <p>No fights match your search.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Data collected via <a href="https://brightdata.com/products/web-scraper/youtube" target="_blank" rel="noopener">Bright Data YouTube Scraper API</a></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BattleBots News Hub — Powered by Bright Data</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-brand">
+        <span class="nav-logo">⚙️ BattleBots Hub</span>
+        <span class="nav-divider"></span>
+        <span class="nav-section">News Hub</span>
+      </div>
+      <span class="nav-badge">Powered by Bright Data</span>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-badge">🕷️ Crawl API</div>
+    <h1>BattleBots News Hub</h1>
+    <p>Aggregated from 8+ sources using Bright Data Crawl API. The latest robot combat news, build logs, and technical analysis in one feed.</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat">
+      <span class="stat-value" id="stat-articles">0</span> articles
+    </div>
+    <div class="stat">
+      from <span class="stat-value" id="stat-sources">0</span> sources
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <div id="category-filters"></div>
+    <select class="filter-source" id="source-filter">
+      <option value="All">All sources</option>
+    </select>
+  </div>
+
+  <!-- Feed -->
+  <main class="feed" id="feed">
+    <div class="loading">
+      <div class="loading-spinner"></div>
+      <p>Loading articles…</p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Crawled by <a href="https://brightdata.com" target="_blank" rel="noopener">Bright Data Crawl API</a> · BattleBots News Hub Demo</p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

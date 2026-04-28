@@ -1,0 +1,12 @@
+{
+  "name": "battlebots-news-hub",
+  "version": "1.0.0",
+  "description": "BattleBots News Hub — aggregated news feed powered by Bright Data Crawl API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "keywords": ["battlebots", "news", "bright-data", "crawl-api"],
+  "license": "MIT"
+}

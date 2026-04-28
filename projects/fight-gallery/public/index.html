@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fight Media Gallery — BattleBots Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <div class="nav-left">
+        <a href="/" class="nav-logo">
+          <svg class="nav-logo-icon" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#2563eb"/>
+            <path d="M8 14l4 4 8-8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>BattleBots Hub</span>
+        </a>
+        <span class="nav-divider"></span>
+        <span class="nav-page">Fight Gallery</span>
+      </div>
+      <div class="nav-right">
+        <a href="https://brightdata.com" target="_blank" rel="noopener" class="nav-powered">
+          Powered by <strong>Bright Data</strong>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-inner">
+      <span class="hero-badge">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Browser API
+      </span>
+      <h1 class="hero-title">Fight Media Gallery</h1>
+      <p class="hero-sub">Scraped from JS-heavy pages using Bright Data Browser API</p>
+      <div class="hero-stats" id="heroStats"></div>
+    </div>
+  </header>
+
+  <!-- Filters -->
+  <section class="filters-section">
+    <div class="filters-inner">
+      <div class="filter-row">
+        <div class="filter-pills" id="typePills">
+          <button class="pill active" data-type="all">All</button>
+          <button class="pill" data-type="video_thumbnail">Video Thumbnails</button>
+          <button class="pill" data-type="fight_photo">Fight Photos</button>
+          <button class="pill" data-type="behind_scenes">Behind the Scenes</button>
+        </div>
+        <div class="filter-dropdowns">
+          <div class="filter-select-wrap">
+            <label for="botFilter" class="filter-label">Bot</label>
+            <select id="botFilter" class="filter-select">
+              <option value="all">All Bots</option>
+            </select>
+          </div>
+          <div class="filter-select-wrap">
+            <label for="seasonFilter" class="filter-label">Season</label>
+            <select id="seasonFilter" class="filter-select">
+              <option value="all">All Seasons</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <p class="filter-count" id="filterCount"></p>
+    </div>
+  </section>
+
+  <!-- Gallery -->
+  <main class="gallery-section">
+    <div class="masonry" id="gallery"></div>
+    <div class="gallery-empty" id="galleryEmpty" style="display:none;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <p>No media matches your filters</p>
+    </div>
+  </main>
+
+  <!-- Lightbox -->
+  <div class="lightbox-overlay" id="lightbox">
+    <div class="lightbox-card">
+      <button class="lightbox-close" id="lightboxClose" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="lightbox-img-wrap">
+        <img id="lightboxImg" src="" alt="">
+      </div>
+      <div class="lightbox-info">
+        <h2 id="lightboxTitle" class="lightbox-title"></h2>
+        <div class="lightbox-meta">
+          <span class="lightbox-bots" id="lightboxBots"></span>
+          <span class="lightbox-season" id="lightboxSeason"></span>
+          <span class="lightbox-date" id="lightboxDate"></span>
+        </div>
+        <div class="lightbox-footer">
+          <span class="lightbox-source-badge" id="lightboxSourceBadge"></span>
+          <a href="#" target="_blank" rel="noopener" class="lightbox-link" id="lightboxLink">View source &rarr;</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>Collected via <strong>Bright Data Browser API</strong> (Playwright)</p>
+      <p class="footer-sub">Images are YouTube thumbnail placeholders for demo purposes</p>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

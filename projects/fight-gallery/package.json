@@ -1,0 +1,12 @@
+{
+  "name": "battlebots-fight-gallery",
+  "version": "1.0.0",
+  "description": "BattleBots Fight Media Gallery — Bright Data Browser API demo",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js"
+  },
+  "keywords": ["battlebots", "bright-data", "browser-api", "gallery"],
+  "license": "MIT"
+}

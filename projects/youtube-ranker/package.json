@@ -1,0 +1,12 @@
+{
+  "name": "battlebots-youtube-ranker",
+  "version": "1.0.0",
+  "description": "BattleBots YouTube Fight Ranker — powered by Bright Data YouTube Scraper API",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js"
+  },
+  "keywords": ["battlebots", "youtube", "bright-data", "scraper"],
+  "license": "MIT"
+}
