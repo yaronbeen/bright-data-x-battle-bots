@@ -41,7 +41,7 @@
 
   async function init() {
     try {
-      const res = await fetch('/api/media');
+      const res = await fetch('/media.json');
       mediaItems = await res.json();
     } catch (e) {
       console.error('Failed to load media:', e);

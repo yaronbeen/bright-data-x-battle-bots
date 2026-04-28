@@ -130,7 +130,7 @@
   async function init() {
     showLoading();
     try {
-      const res = await fetch('/api/articles');
+      const res = await fetch('/articles.json');
       if (!res.ok) throw new Error('Failed to fetch articles');
       articles = await res.json();
       renderSourceDropdown();

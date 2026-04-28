@@ -8,7 +8,7 @@ const resultCount = document.querySelector('#result-count');
 const modal = document.querySelector('#modal');
 
 // Load bot data
-fetch('/api/bots').then(r => r.json()).then(bots => {
+fetch('/bots.json').then(r => r.json()).then(bots => {
   allBots = bots;
   render();
 });
