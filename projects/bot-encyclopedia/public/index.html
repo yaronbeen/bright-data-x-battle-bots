@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BattleBots Encyclopedia — Powered by Bright Data Scraper API</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <div class="logo"><span class="logo-icon">⚡</span> BattleBots <strong>Encyclopedia</strong></div>
+        <div class="nav-meta">Scraped by Bright Data</div>
+      </div>
+    </nav>
+
+    <main>
+      <section class="hero">
+        <span class="badge">📊 Scraper Studio</span>
+        <h1>Every BattleBot.<br>Structured Data.</h1>
+        <p>30 competitors scraped from the BattleBots wiki using Bright Data Scraper API. Search, filter, and explore the full roster.</p>
+      </section>
+
+      <section class="controls">
+        <input id="search" type="search" placeholder="Search bots by name, team, or weapon…" autocomplete="off" />
+        <div class="filters">
+          <select id="weapon-filter">
+            <option value="">All weapons</option>
+            <option value="spinner">Spinners</option>
+            <option value="flipper">Flippers</option>
+            <option value="hammer">Hammers</option>
+            <option value="crusher">Crushers</option>
+            <option value="saw">Saws</option>
+            <option value="lifter">Lifters</option>
+            <option value="hybrid">Hybrids</option>
+            <option value="puncher">Punchers</option>
+          </select>
+          <select id="status-filter">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="retired">Retired</option>
+          </select>
+          <select id="sort">
+            <option value="wins">Most wins</option>
+            <option value="ko">Most KOs</option>
+            <option value="winrate">Best win rate</option>
+            <option value="name">A-Z</option>
+          </select>
+        </div>
+        <p id="result-count" class="result-count"></p>
+      </section>
+
+      <section id="grid" class="bot-grid"></section>
+
+      <!-- Detail modal -->
+      <div id="modal" class="modal" hidden>
+        <div class="modal-backdrop" id="modal-backdrop"></div>
+        <div class="modal-card">
+          <button class="modal-close" id="modal-close">✕</button>
+          <div class="modal-header">
+            <img id="modal-img" src="" alt="" />
+            <div>
+              <h2 id="modal-name"></h2>
+              <p id="modal-team" class="modal-meta"></p>
+              <p id="modal-weapon" class="modal-meta"></p>
+            </div>
+          </div>
+          <div class="modal-stats" id="modal-stats"></div>
+          <p id="modal-notable" class="modal-notable"></p>
+          <div class="modal-seasons" id="modal-seasons"></div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      Data scraped from BattleBots Wiki using <a href="https://brightdata.com/products/web-scraper" target="_blank" rel="noreferrer">Bright Data Scraper API</a>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>

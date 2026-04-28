@@ -1,0 +1,10 @@
+{
+  "name": "battlebots-encyclopedia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.js",
+    "deploy": "wrangler pages deploy public --project-name battlebots-encyclopedia"
+  }
+}
