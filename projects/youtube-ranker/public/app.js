@@ -31,6 +31,16 @@
     });
   }
 
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function thumbFor(v) {
+    const label = `${v.botA} vs ${v.botB}`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#111827"/><stop offset="1" stop-color="#ef4444"/></linearGradient></defs><rect width="160" height="90" rx="12" fill="url(#g)"/><circle cx="80" cy="45" r="18" fill="rgba(255,255,255,.18)"/><path d="M75 35v20l18-10z" fill="white"/><text x="80" y="78" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="9" font-weight="700">${esc(label)}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+
   // ── Sorting ──
   function sortVideos(list, metric) {
     const sorted = [...list];
@@ -98,10 +108,9 @@
             <div class="fight-cell">
               <img
                 class="fight-thumb"
-                src="${v.thumbnail}"
+                src="${thumbFor(v)}"
                 alt="${v.title}"
                 loading="lazy"
-                onerror="this.style.background='#e5e7eb';this.alt=''"
               />
               <div class="fight-info">
                 <div class="fight-title">

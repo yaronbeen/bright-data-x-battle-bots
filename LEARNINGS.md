@@ -1,5 +1,30 @@
 # LEARNINGS.md
 
+## 2026-04-28 — Session 5 (E2E testing, bug fixes, canonical sources)
+
+### Wrangler Pages Functions deployment gotcha
+- `wrangler pages deploy public` auto-builds `functions/` into a worker ONLY when no `_worker.js` exists in `public/`.
+- If a stale `_worker.js` is present (from a manual `wrangler pages functions build --outfile`), it gets uploaded as-is and breaks routing — API routes return HTML instead of JSON.
+- Fix: never commit `_worker.js`/`_routes.json` to `public/`; add them to `.gitignore`.
+
+### HTML `hidden` attribute vs CSS `display`
+- `<div hidden>` sets `display: none` by default, but ANY CSS rule that sets `display: flex/grid/block` overrides it.
+- The encyclopedia modal had `.modal { display: flex; }` which made `hidden` ineffective — the backdrop intercepted all clicks.
+- Fix: explicit `.modal[hidden] { display: none; }` rule.
+
+### Fake YouTube video IDs cause 404 storms
+- Pre-scraped JSON used made-up YouTube video IDs for thumbnails. Every card rendered = a 404 console error to `img.youtube.com`.
+- Fix: generate inline SVG data URIs at render time showing bot names/media types. Zero external requests, visually clean.
+
+### Bright Data SERP 520 errors
+- All Reddit-targeted SERP queries via `web_unlocker1` currently return HTTP 520. This causes H2H to fall back to zero-evidence "Too close to call."
+- Not yet resolved. May need zone config change or Bright Data support.
+
+### Canonical BattleBots sources
+- Three authoritative sources documented: `battlebots.com/robots/`, `battlebots.fandom.com/wiki/BattleBots_Wiki`, `reddit.com/r/battlebots/`.
+- Fandom returns 403 to raw HEAD/GET (bot protection) — this is exactly why Bright Data Web Unlocker is needed.
+- Reddit and `battlebots.com` respond directly.
+
 ## 2026-04-27 — Session 3 (UI polish + deployment)
 
 ### Cloudflare Pages deployment

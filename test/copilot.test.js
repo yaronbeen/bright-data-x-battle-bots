@@ -7,10 +7,10 @@ import { synthesizeVerdict } from '../src/llm.js';
 
 // ── Roster ──
 
-test('roster has 10 bots with images', () => {
-  assert.equal(ROSTER.length, 10);
+test('roster has 30 bots with weapon data and valid image paths when provided', () => {
+  assert.equal(ROSTER.length, 30);
   for (const bot of ROSTER) {
-    assert.ok(bot.image.startsWith('/img/'), `${bot.name} missing image`);
+    if (bot.image) assert.ok(bot.image.startsWith('/img/'), `${bot.name} has invalid image path`);
     assert.ok(bot.weapon, `${bot.name} missing weapon`);
   }
 });

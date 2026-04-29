@@ -51,6 +51,21 @@ const OUT_DIR = path.join(__dirname, '..', 'data', 'scraped');
 
 const TARGETS = [
   {
+    name: 'official-battlebots-robots',
+    url: 'https://battlebots.com/robots/',
+    description: 'Official BattleBots robot profile directory',
+  },
+  {
+    name: 'battlebots-wiki-home',
+    url: 'https://battlebots.fandom.com/wiki/BattleBots_Wiki',
+    description: 'BattleBots Wiki source index',
+  },
+  {
+    name: 'reddit-battlebots-front-page',
+    url: 'https://www.reddit.com/r/battlebots/',
+    description: 'r/battlebots community front page',
+  },
+  {
     name: 'reddit-battlebots-top-week',
     url: 'https://www.reddit.com/r/battlebots/top/?t=week',
     description: 'Top posts this week from r/battlebots',

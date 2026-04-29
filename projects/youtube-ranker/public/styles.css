@@ -158,6 +158,15 @@ a {
   margin: 0 auto;
   line-height: 1.6;
 }
+.source-strip {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px;
+}
+.source-strip a {
+  padding: 8px 14px; border: 1px solid var(--border); border-radius: 999px;
+  background: #fff; color: var(--accent); font-size: .78rem; font-weight: 800;
+  box-shadow: var(--card-shadow);
+}
+.source-strip a:hover { border-color: var(--accent); background: var(--accent-light); }
 
 /* ── Stats Bar ── */
 .stats-bar {

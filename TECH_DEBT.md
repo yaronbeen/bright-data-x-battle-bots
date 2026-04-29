@@ -8,6 +8,8 @@
 
 ## P1 — This Week
 
+- **Bright Data SERP 520s**: All Reddit-targeted SERP queries return HTTP 520 from Web Unlocker. H2H falls back to zero-evidence toss-up. May need zone config change or BD support ticket.
+- **MongoDB integration**: User wants to add Atlas M0 (free 512MB). Would enable cached predictions, scheduled scrapes, trend data, search.
 - **SERP dedup**: "Minotaur vs Tombstone" and "Tombstone vs Minotaur" return near-identical results. Drop the reversed query, save an API call.
 - **Result deduplication**: Same Reddit URL from multiple queries counted multiple times in sentiment.
 - **Cache-Control headers**: Static assets have no caching. Add `max-age=3600` on images, `max-age=60` on HTML.
@@ -24,7 +26,7 @@
 
 - **Image generation**: Render verdict card as a PNG for download/OG preview.
 - **URL sharing**: `/matchup/minotaur-vs-tombstone` with OG metadata.
-- **More bots**: Expand roster beyond 10.
+- **More bots**: Roster expanded to 30 but only 10 have local images. Download images for remaining 20.
 - **Custom domain**: Point a subdomain at battlebots-h2h.pages.dev.
 
 ## Resolved Items
@@ -38,3 +40,10 @@
 - 2026-04-27: Added same-bot validation in frontend
 - 2026-04-27: Stripped "Read more" SERP artifacts from evidence descriptions
 - 2026-04-27: Deployed to Cloudflare Pages (free tier)
+- 2026-04-28: Fixed H2H API routing (functions not compiling into worker bundle)
+- 2026-04-28: Fixed encyclopedia modal overlay blocking clicks
+- 2026-04-28: Fixed YouTube + Gallery broken thumbnail 404s (inline SVG placeholders)
+- 2026-04-28: Fixed News Hub source stat counting unfiltered set
+- 2026-04-28: Updated roster test for 30-bot expansion
+- 2026-04-28: Added canonical source provenance strips to all 5 sites
+- 2026-04-28: Updated scrape scripts to target canonical BattleBots URLs

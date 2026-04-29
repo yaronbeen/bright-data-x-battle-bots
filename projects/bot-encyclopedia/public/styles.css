@@ -34,6 +34,14 @@ main { max-width: 1100px; margin: 0 auto; padding: 0 20px 80px; }
 }
 .hero h1 { font-size: 2.8rem; font-weight: 800; letter-spacing: -.04em; line-height: 1.1; margin: 0 0 12px; color: var(--fg); }
 .hero p { font-size: 1.05rem; color: #555; line-height: 1.6; margin: 0; }
+.source-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 10px; }
+.source-strip a {
+  padding: 8px 12px; border-radius: 999px; background: var(--accent-light); color: var(--accent);
+  font-size: .76rem; font-weight: 800; text-decoration: none;
+}
+.source-strip a:hover { background: #ddd2fe; }
+.source-note { font-size: .78rem !important; color: #888 !important; margin-top: 10px !important; }
+.source-note code { background:#f3f0ff; padding:2px 6px; border-radius:4px; font-size:.75rem; }
 
 /* ── Controls ── */
 .controls { margin-bottom: 24px; }
@@ -110,6 +118,7 @@ select:focus { border-color: var(--accent); outline: none; }
   display: flex; align-items: center; justify-content: center;
   animation: modal-in .3s ease;
 }
+.modal[hidden] { display: none; }
 @keyframes modal-in { from { opacity: 0; } to { opacity: 1; } }
 
 .modal-backdrop {
@@ -164,6 +173,7 @@ footer a { color: var(--accent); font-weight: 700; text-decoration: none; }
 
 @media (max-width: 600px) {
   .hero h1 { font-size: 2rem; }
+  .source-strip { flex-direction: column; }
   .bot-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
   .modal-stats { grid-template-columns: repeat(2, 1fr); }
   .filters { flex-direction: column; }

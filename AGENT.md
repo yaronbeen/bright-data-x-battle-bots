@@ -12,6 +12,29 @@
 
 **Live at:** https://battlebots-h2h.pages.dev
 
+**Project suite:**
+- H2H Predictor: https://battlebots-h2h.pages.dev
+- Bot Encyclopedia: https://battlebots-encyclopedia.pages.dev
+- YouTube Fight Ranker: https://battlebots-youtube.pages.dev
+- News Hub: https://battlebots-news.pages.dev
+- Fight Gallery: https://battlebots-gallery.pages.dev
+
+## Canonical Data Sources
+
+Use these sources when adding or refreshing BattleBots data. Do not invent bot records, fight metadata, sources, or claims that cannot be traced back to one of these or to a scrape output generated from them.
+
+| Source | URL | Use For |
+| --- | --- | --- |
+| BattleBots Wiki | https://battlebots.fandom.com/wiki/BattleBots_Wiki | Bot history, seasons, weapons, team context, historical fight references |
+| r/battlebots | https://www.reddit.com/r/battlebots/ | Community sentiment, fan discussion, media posts, controversy/context |
+| Official robots directory | https://battlebots.com/robots/ | Current official robot roster, team names, official profile links |
+
+Page copy should be explicit about provenance:
+- Official roster/profile claims should point to `battlebots.com/robots/`.
+- Historical encyclopedia data should point to the BattleBots Wiki.
+- Sentiment, discussion, and fan/media claims should point to `reddit.com/r/battlebots/`.
+- Bright Data should be described as the collection/enrichment layer, not as the original authority on BattleBots facts.
+
 **Primary audience:** Bright Data marketing team. Secondary: BattleBots fans sharing screenshots.
 
 ## Architecture
@@ -45,6 +68,7 @@ Stack: vanilla Node.js server for local dev, Cloudflare Pages + Functions for pr
 | 2026-04-27 | Progressive streaming (NDJSON) | Early sentiment card shows BEFORE LLM finishes |
 | 2026-04-27 | Deployed to Cloudflare Pages | Free tier, functions for API routes, secrets for API keys |
 | 2026-04-27 | web_unlocker1 zone (not serp_api2) | serp_api2 has IP blocklist |
+| 2026-04-28 | Canonical BattleBots sources documented | Use official robot directory, BattleBots Wiki, and r/battlebots as provenance anchors |
 
 ## Runbook
 
@@ -69,6 +93,9 @@ npm run preview     # local Cloudflare preview on port 3200
 - Bright Data: `POST https://api.brightdata.com/request` with Bearer auth, `brd_json=1` for structured Google SERP
 - OpenRouter: `POST https://openrouter.ai/api/v1/chat/completions` (OpenAI-compatible)
 - Cloudflare Pages Functions: ESM exports with `onRequestGet`/`onRequestPost`
+- BattleBots Wiki: `https://battlebots.fandom.com/wiki/BattleBots_Wiki`
+- r/battlebots: `https://www.reddit.com/r/battlebots/`
+- Official BattleBots robots: `https://battlebots.com/robots/`
 
 ## Project File Structure
 
@@ -79,7 +106,7 @@ src/
   bright-data.js   — Bright Data SERP API client (fetchSerp, fetchSerpFanOut)
   sentiment.js     — Keyword sentiment scoring (scoreText, analyzeResults)
   llm.js           — Claude Haiku verdict synthesis (structured JSON output)
-  roster.js        — 10 BattleBots with metadata + local image paths
+  roster.js        — 30 BattleBots with metadata + local image paths/fallbacks
 public/
   index.html       — UI: selector with photos, early sentiment, verdict card, evidence
   styles.css       — Neo-brutalist styling with animations

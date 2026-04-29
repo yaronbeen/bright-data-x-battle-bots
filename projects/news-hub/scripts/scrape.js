@@ -27,12 +27,11 @@ if (!TOKEN) {
   process.exit(1);
 }
 
-// URLs to crawl — battlebots.com news & article pages
+// Canonical URLs to crawl — official robot profiles, wiki context, and Reddit community discussion
 const TARGETS = [
-  "https://battlebots.com",
-  "https://battlebots.com/news",
-  "https://battlebots.com/blog",
-  "https://battlebots.com/events",
+  "https://battlebots.com/robots/",
+  "https://battlebots.fandom.com/wiki/BattleBots_Wiki",
+  "https://www.reddit.com/r/battlebots/",
 ];
 
 const OUTPUT_DIR = path.join(__dirname, "..", "data", "crawled");

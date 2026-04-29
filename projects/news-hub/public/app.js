@@ -37,7 +37,7 @@
 
   /* ── Render ─────────────────────────────────────── */
   function renderStats(filtered) {
-    const sources = new Set(articles.map(a => a.source));
+    const sources = new Set(filtered.map(a => a.source));
     $statArticles.textContent = filtered.length;
     $statSources.textContent = sources.size;
   }

@@ -41,7 +41,12 @@
         Browser API
       </span>
       <h1 class="hero-title">Fight Media Gallery</h1>
-      <p class="hero-sub">Scraped from JS-heavy pages using Bright Data Browser API</p>
+      <p class="hero-sub">Media and context gathered from official robot profiles, BattleBots Wiki references, and r/battlebots posts using Bright Data Browser/Web Unlocker flows.</p>
+      <div class="source-strip" aria-label="Canonical data sources">
+        <a href="https://battlebots.com/robots/" target="_blank" rel="noopener">Official robots</a>
+        <a href="https://battlebots.fandom.com/wiki/BattleBots_Wiki" target="_blank" rel="noopener">Wiki references</a>
+        <a href="https://www.reddit.com/r/battlebots/" target="_blank" rel="noopener">Fan media</a>
+      </div>
       <div class="hero-stats" id="heroStats"></div>
     </div>
   </header>
@@ -111,8 +116,8 @@
   <!-- Footer -->
   <footer class="footer">
     <div class="footer-inner">
-      <p>Collected via <strong>Bright Data Browser API</strong> (Playwright)</p>
-      <p class="footer-sub">Thumbnails sourced from YouTube. Run scripts/scrape.js to collect real fight media via Bright Data Browser API.</p>
+      <p>Collected via <strong>Bright Data Browser API</strong> and Web Unlocker flows</p>
+      <p class="footer-sub">Canonical source set: official robot profiles, BattleBots Wiki, and r/battlebots. Run scripts/scrape.js to collect fresh media.</p>
     </div>
   </footer>
 

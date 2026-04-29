@@ -138,6 +138,14 @@ a {
   font-weight: 500;
   color: var(--text-muted);
 }
+.source-strip {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px;
+}
+.source-strip a {
+  padding: 7px 12px; border-radius: 20px; background: #fff; color: var(--accent);
+  border: 1px solid #bfdbfe; font-size: 13px; font-weight: 700; box-shadow: var(--card-shadow);
+}
+.source-strip a:hover { background: #eff6ff; border-color: var(--accent); }
 
 /* ── Stats Bar ───────────────────────────────────── */
 .stats-bar {

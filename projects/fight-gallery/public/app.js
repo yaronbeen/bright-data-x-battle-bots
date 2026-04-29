@@ -94,6 +94,17 @@
     });
   }
 
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function imageFor(item) {
+    const label = TYPE_LABELS[item.type] || 'Media';
+    const title = item.title.length > 34 ? `${item.title.slice(0, 31)}...` : item.title;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#111827"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="320" height="220" rx="18" fill="url(#g)"/><circle cx="160" cy="88" r="36" fill="rgba(255,255,255,.16)"/><path d="M148 68v40l36-20z" fill="white"/><text x="160" y="154" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="800">${esc(label)}</text><text x="160" y="181" text-anchor="middle" fill="rgba(255,255,255,.78)" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600">${esc(title)}</text></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+
   // ── Render Gallery ──
   function renderGallery() {
     const filtered = getFiltered();
@@ -117,18 +128,18 @@
 
       card.innerHTML = `
         <div class="card-img-wrap">
-          <img class="card-img" src="${item.imageUrl}" alt="${item.title}" loading="lazy">
+          <img class="card-img" src="${imageFor(item)}" alt="${esc(item.title)}" loading="lazy">
           <span class="card-source-badge ${item.source}">
             ${SOURCE_ICONS[item.source] || ''}
             ${SOURCE_LABELS[item.source] || item.source}
           </span>
           <span class="card-type-badge">${TYPE_LABELS[item.type] || item.type}</span>
           <div class="card-overlay">
-            <span class="card-overlay-title">${item.title}</span>
+            <span class="card-overlay-title">${esc(item.title)}</span>
           </div>
         </div>
         <div class="card-body">
-          <p class="card-title">${item.title}</p>
+          <p class="card-title">${esc(item.title)}</p>
           <div class="card-meta">
             ${botTags}
             <span class="card-season">S${item.season}</span>
@@ -143,7 +154,7 @@
 
   // ── Lightbox ──
   function openLightbox(item) {
-    document.getElementById('lightboxImg').src = item.imageUrl;
+    document.getElementById('lightboxImg').src = imageFor(item);
     document.getElementById('lightboxImg').alt = item.title;
     document.getElementById('lightboxTitle').textContent = item.title;
 

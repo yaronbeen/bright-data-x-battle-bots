@@ -96,6 +96,14 @@ img { display: block; max-width: 100%; }
   color: #64748b;
   margin-bottom: 20px;
 }
+.source-strip {
+  display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin: 0 auto 20px;
+}
+.source-strip a {
+  padding: 8px 14px; border: 1px solid #fed7aa; border-radius: 999px;
+  background: #fff7ed; color: #c2410c; font-size: 13px; font-weight: 800;
+}
+.source-strip a:hover { border-color: #f97316; background: #ffedd5; }
 .hero-stats {
   display: flex;
   align-items: center;

@@ -18,8 +18,13 @@
       <section class="hero">
         <span class="badge">📊 Scraper Studio</span>
         <h1>Every BattleBot.<br>Structured Data.</h1>
-        <p>30 competitors scraped from the BattleBots wiki using Bright Data Scraper API. Search, filter, and explore the full roster.</p>
-        <p style="font-size:.78rem;color:#888;margin-top:10px;">Data scraped from BattleBots Wiki · Last scraped: April 2026 · Run <code style="background:#f3f0ff;padding:2px 6px;border-radius:4px;font-size:.75rem;">scripts/scrape.js</code> to refresh</p>
+        <p>30 competitors organized from official robot profiles and BattleBots Wiki context. Search by bot, team, weapon, status, and season history.</p>
+        <div class="source-strip" aria-label="Canonical data sources">
+          <a href="https://battlebots.com/robots/" target="_blank" rel="noreferrer">Official robots</a>
+          <a href="https://battlebots.fandom.com/wiki/BattleBots_Wiki" target="_blank" rel="noreferrer">Wiki history</a>
+          <a href="https://www.reddit.com/r/battlebots/" target="_blank" rel="noreferrer">Community context</a>
+        </div>
+        <p class="source-note">Last refreshed: April 2026 · Run <code>scripts/scrape.js</code> to refresh from canonical sources.</p>
       </section>
 
       <section class="controls">
@@ -74,7 +79,7 @@
     </main>
 
     <footer>
-      Data scraped from BattleBots Wiki using <a href="https://brightdata.com/products/web-scraper" target="_blank" rel="noreferrer">Bright Data Scraper API</a>
+      Data anchored to <a href="https://battlebots.com/robots/" target="_blank" rel="noreferrer">official profiles</a> and <a href="https://battlebots.fandom.com/wiki/BattleBots_Wiki" target="_blank" rel="noreferrer">BattleBots Wiki</a>, collected with <a href="https://brightdata.com/products/web-scraper" target="_blank" rel="noreferrer">Bright Data Scraper API</a>
     </footer>
 
     <script src="/app.js" type="module"></script>
