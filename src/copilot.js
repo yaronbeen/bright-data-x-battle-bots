@@ -142,7 +142,7 @@ export async function predict(botAId, botBId, options = {}, onProgress) {
         };
         narrative = llmResult.narrative;
         curatedEvidence = llmResult.curated_evidence || [];
-        llm = { ...llm, used: true, model: options.llmModel || 'anthropic/claude-3.5-haiku' };
+        llm = { ...llm, used: true, model: options.llmModel || 'anthropic/claude-haiku-4.5' };
       }
     } catch (err) {
       llm = { ...llm, error: err.message };

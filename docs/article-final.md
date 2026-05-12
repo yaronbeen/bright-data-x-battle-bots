@@ -41,7 +41,7 @@ const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&
 const res = await fetch('https://api.brightdata.com/request', {
   method: 'POST',
   headers: { Authorization: `Bearer ${apiToken}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify({ zone: 'web_unlocker1', url: searchUrl, format: 'raw' }),
+  body: JSON.stringify({ zone: 'serp_api1', url: searchUrl, format: 'raw' }),
 });
 
 const data = await res.json();
@@ -180,6 +180,6 @@ Everything is live and open source. The H2H Predictor will give you a verdict on
 | News Hub | [battlebots-news.pages.dev](https://battlebots-news.pages.dev) | [GitHub](https://github.com/yaronbeen/bright-data-x-battle-bots/tree/main/projects/news-hub) |
 | Fight Gallery | [battlebots-gallery.pages.dev](https://battlebots-gallery.pages.dev) | [GitHub](https://github.com/yaronbeen/bright-data-x-battle-bots/tree/main/projects/fight-gallery) |
 
-Built for the [#battlebotsdev challenge](https://brightdata.com/lp/battelbots). The patterns (SERP-to-sentiment, wiki scraping past bot protection, async dataset collection, crawl-to-markdown, caching with graceful degradation) work for any domain. Swap "BattleBots" for your brand, your competitors, or your niche.
+Built for the [#battlebotsdev challenge](https://brightdata.com/lp/battelbots). The patterns (SERP-to-sentiment, wiki scraping past bot protection, async dataset collection, crawl-to-markdown, caching with graceful degradation) work for any domain. Swap "BattleBots" for any topic with active online discussion.
 
 Reddit has opinions about everything. Now you know how to turn them into structured data.

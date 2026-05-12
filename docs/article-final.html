@@ -96,7 +96,7 @@ const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&
 const res = await fetch(&#39;https://api.brightdata.com/request&#39;, {
   method: &#39;POST&#39;,
   headers: { Authorization: `Bearer ${apiToken}`, &#39;Content-Type&#39;: &#39;application/json&#39; },
-  body: JSON.stringify({ zone: &#39;web_unlocker1&#39;, url: searchUrl, format: &#39;raw&#39; }),
+  body: JSON.stringify({ zone: &#39;serp_api1&#39;, url: searchUrl, format: &#39;raw&#39; }),
 });
 
 const data = await res.json();
@@ -351,7 +351,7 @@ href="https://github.com/yaronbeen/bright-data-x-battle-bots/tree/main/projects/
 href="https://brightdata.com/lp/battelbots">#battlebotsdev
 challenge</a>. The patterns (SERP-to-sentiment, wiki scraping past bot
 protection, async dataset collection, crawl-to-markdown, caching with
-graceful degradation) work for any domain. Swap “BattleBots” for your
-brand, your competitors, or your niche.</p>
+graceful degradation) work for any domain. Swap “BattleBots” for any
+topic with active online discussion.</p>
 <p>Reddit has opinions about everything. Now you know how to turn them
 into structured data.</p>
