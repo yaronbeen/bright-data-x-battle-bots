@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { predict, ROSTER, SUGGESTED_MATCHUPS } from './copilot.js';
+import { getMatchupHistory, getPopularMatchups, ensureIndexes } from './db.js';
 
 const publicDir = new URL('../public/', import.meta.url).pathname;
 const port = Number(process.env.PORT || 3000);
@@ -12,6 +13,7 @@ const llmOptions = () => ({
   llmApiKey: process.env.LLM_API_KEY || process.env.OPENAI_API_KEY,
   llmModel: process.env.LLM_MODEL,
   llmBaseUrl: process.env.LLM_BASE_URL || undefined,
+  mongodbUri: process.env.MONGODB_URI || undefined,
 });
 
 export function createApp() {
@@ -19,6 +21,21 @@ export function createApp() {
     // API: roster + suggested matchups
     if (req.method === 'GET' && req.url === '/api/roster') {
       return json(res, 200, { ok: true, roster: ROSTER, suggested: SUGGESTED_MATCHUPS });
+    }
+
+    // API: matchup history
+    if (req.method === 'GET' && req.url?.startsWith('/api/history')) {
+      const uri = process.env.MONGODB_URI;
+      if (!uri) return json(res, 503, { ok: false, error: 'Database not configured' });
+      const params = new URL(req.url, `http://localhost`).searchParams;
+      const type = params.get('type') || 'recent';
+      const limit = Math.min(parseInt(params.get('limit') || '20', 10), 50);
+      if (type === 'popular') {
+        const popular = await getPopularMatchups(uri, { limit });
+        return json(res, 200, { ok: true, popular });
+      }
+      const history = await getMatchupHistory(uri, { limit });
+      return json(res, 200, { ok: true, history });
     }
 
     // API: streaming prediction (NDJSON)
@@ -97,5 +114,11 @@ function mime(path) {
 if (process.argv[1] === new URL(import.meta.url).pathname) {
   createApp().listen(port, () => {
     console.log(`BattleBots Head-to-Head → http://localhost:${port}`);
+    // Create indexes in background (non-blocking)
+    if (process.env.MONGODB_URI) {
+      ensureIndexes(process.env.MONGODB_URI)
+        .then(() => console.log('[db] MongoDB connected, indexes ready'))
+        .catch((err) => console.warn('[db] MongoDB setup skipped:', err.message));
+    }
   });
 }

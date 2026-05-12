@@ -15,7 +15,7 @@ export async function synthesizeVerdict(botA, botB, analysisA, analysisB, allEvi
   const apiKey = options.llmApiKey;
   if (!apiKey || allEvidence.length === 0) return null;
 
-  const model = options.llmModel || 'anthropic/claude-3.5-haiku';
+  const model = options.llmModel || 'anthropic/claude-haiku-4.5';
   const baseUrl = options.llmBaseUrl || 'https://openrouter.ai/api/v1/chat/completions';
   const fetchImpl = options.fetchImpl || fetch;
 
@@ -54,22 +54,33 @@ Pick 3-5 of the MOST relevant quotes — ones that directly support or contradic
 
 Only use facts from the evidence. Never invent match results or opinions.`;
 
-  const res = await fetchImpl(baseUrl, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.2,
-      max_tokens: 800,
-      messages: [
-        { role: 'system', content: 'You are a BattleBots analyst. Always respond with valid JSON only. No markdown fences, no explanation outside the JSON.' },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 45000); // 45s timeout
+
+  let res;
+  try {
+    res = await fetchImpl(baseUrl, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.2,
+        max_tokens: 800,
+        messages: [
+          { role: 'system', content: 'You are a BattleBots analyst. Always respond with valid JSON only. No markdown fences, no explanation outside the JSON.' },
+          { role: 'user', content: prompt },
+        ],
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeout);
+    throw new Error(err.name === 'AbortError' ? 'LLM request timed out (45s)' : err.message);
+  }
+  clearTimeout(timeout);
 
   if (!res.ok) {
     const text = await res.text();

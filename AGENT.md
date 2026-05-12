@@ -2,7 +2,7 @@
 
 ## Start Here
 
-1. Read `handover/handover-004.md` — latest session context
+1. Read `handover/handover-006.md` — latest session context
 2. Review P0 items in `TECH_DEBT.md`
 3. Skim `LEARNINGS.md` for API quirks and UX decisions
 
@@ -50,7 +50,7 @@ Two bot dropdowns (with live photo previews)
     → Screenshot-worthy verdict card with in-card Bright Data branding
 ```
 
-Stack: vanilla Node.js server for local dev, Cloudflare Pages + Functions for production. No frameworks, no build step. Tests use Node built-in test runner.
+Stack: vanilla Node.js server for local dev, Cloudflare Pages + Functions for production. MongoDB Atlas (M0 free) for prediction caching. No frameworks, no build step. Tests use Node built-in test runner.
 
 ## Decisions Log
 
@@ -69,6 +69,9 @@ Stack: vanilla Node.js server for local dev, Cloudflare Pages + Functions for pr
 | 2026-04-27 | Deployed to Cloudflare Pages | Free tier, functions for API routes, secrets for API keys |
 | 2026-04-27 | web_unlocker1 zone (not serp_api2) | serp_api2 has IP blocklist |
 | 2026-04-28 | Canonical BattleBots sources documented | Use official robot directory, BattleBots Wiki, and r/battlebots as provenance anchors |
+| 2026-04-29 | MongoDB Atlas M0 for prediction caching | Free 512MB, graceful degradation if unavailable, 24h TTL with auto-expiry |
+| 2026-04-29 | mongodb driver on Cloudflare Workers via nodejs_compat | Atlas Data API deprecated; driver works with compatibility flag |
+| 2026-04-29 | Stay on Cloudflare Pages (not Render/Vercel) | Vercel 10s timeout kills pipeline; Render cold starts bad for demo; CF has zero cold starts |
 
 ## Runbook
 
@@ -83,6 +86,7 @@ npm run preview     # local Cloudflare preview on port 3200
 - `BRIGHT_DATA_API_TOKEN` + `BRIGHT_DATA_SERP_ZONE=web_unlocker1`
 - `LLM_API_KEY` (OpenRouter key) + `LLM_MODEL=anthropic/claude-3.5-haiku`
 - `LLM_BASE_URL=https://openrouter.ai/api/v1/chat/completions`
+- `MONGODB_URI` (Atlas connection string — optional, enables caching)
 
 **Cloudflare** secrets are set via `wrangler pages secret put`.
 
@@ -93,6 +97,7 @@ npm run preview     # local Cloudflare preview on port 3200
 - Bright Data: `POST https://api.brightdata.com/request` with Bearer auth, `brd_json=1` for structured Google SERP
 - OpenRouter: `POST https://openrouter.ai/api/v1/chat/completions` (OpenAI-compatible)
 - Cloudflare Pages Functions: ESM exports with `onRequestGet`/`onRequestPost`
+- MongoDB Atlas: `mongodb+srv://` connection via `mongodb` driver (M0 free tier, `battlebots` database, `predictions` collection)
 - BattleBots Wiki: `https://battlebots.fandom.com/wiki/BattleBots_Wiki`
 - r/battlebots: `https://www.reddit.com/r/battlebots/`
 - Official BattleBots robots: `https://battlebots.com/robots/`
@@ -102,10 +107,11 @@ npm run preview     # local Cloudflare preview on port 3200
 ```
 src/
   server.js        — Local Node HTTP server + static files + API routes
-  copilot.js       — Pipeline orchestrator + streaming callbacks + suggested matchups
+  copilot.js       — Pipeline orchestrator + streaming callbacks + suggested matchups + cache integration
   bright-data.js   — Bright Data SERP API client (fetchSerp, fetchSerpFanOut)
   sentiment.js     — Keyword sentiment scoring (scoreText, analyzeResults)
   llm.js           — Claude Haiku verdict synthesis (structured JSON output)
+  db.js            — MongoDB Atlas client: prediction cache, history, popular matchups
   roster.js        — 30 BattleBots with metadata + local image paths/fallbacks
 public/
   index.html       — UI: selector with photos, early sentiment, verdict card, evidence
@@ -116,6 +122,7 @@ functions/
   api/roster.js    — Cloudflare Pages Function: GET /api/roster
   api/predict.js   — Cloudflare Pages Function: POST /api/predict
   api/predict-stream.js — Cloudflare Pages Function: POST /api/predict-stream (NDJSON)
+  api/history.js   — Cloudflare Pages Function: GET /api/history (recent + popular matchups)
 test/
   copilot.test.js  — 12 tests (roster, validation, sentiment, LLM, pipeline, streaming)
 docs/

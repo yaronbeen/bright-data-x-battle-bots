@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node src/server.js",
-    "scrape": "node scripts/scrape.js"
+    "scrape": "node scripts/scrape.js",
+    "deploy": "wrangler pages deploy public --project-name battlebots-news"
   },
   "keywords": ["battlebots", "news", "bright-data", "crawl-api"],
   "license": "MIT"

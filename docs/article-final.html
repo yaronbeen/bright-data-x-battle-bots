@@ -1,0 +1,432 @@
+<h1
+id="i-built-5-battlebots-apps-with-bright-data.-heres-what-actually-worked.">I
+Built 5 BattleBots Apps with Bright Data. Here’s What Actually
+Worked.</h1>
+<blockquote>
+<p>“Reddit leans toward Minotaur. Confidence: strong. Fans consistently
+cite its drum reliability and knockout power.”</p>
+</blockquote>
+<p>That’s a real verdict from one of the tools. You pick two BattleBots
+from a dropdown, the system searches Reddit via Google, scores the
+sentiment of every result, and Claude Haiku 4.5 writes an analyst-style
+verdict with cited evidence. First request takes about 8 seconds. Repeat
+requests skip the pipeline entirely and load from cache.</p>
+<p>I built this as part of the <a
+href="https://brightdata.com/lp/battelbots">Bright Data x BattleBots
+developer challenge</a> (#battlebotsdev). Full disclosure: I’m a Bright
+Data DevRel ambassador, so I’m not a neutral party here. But the code is
+real, the sites are live, and I’ll be honest about what worked and what
+didn’t. It turned into five separate apps, all deployed for free on
+Cloudflare Pages. I’m using BattleBots as the example, but the scraping
+patterns here transfer to any brand, product, or topic you want to
+track.</p>
+<p>Here’s what I built, how the scraping works, and what it actually
+costs.</p>
+<h2 id="the-five-projects">The Five Projects</h2>
+<p>All live, all connected via a shared nav bar:</p>
+<ul>
+<li><strong><a href="https://battlebots-h2h.pages.dev">H2H
+Predictor</a></strong> — pick two bots, get a Reddit-powered verdict
+with cited evidence</li>
+<li><strong><a href="https://battlebots-encyclopedia.pages.dev">Bot
+Encyclopedia</a></strong> — 30 bots with stats, weapons, win rates,
+searchable and filterable</li>
+<li><strong><a href="https://battlebots-youtube.pages.dev">YouTube
+Ranker</a></strong> — real fight videos ranked by views, likes, and
+engagement</li>
+<li><strong><a href="https://battlebots-news.pages.dev">News
+Hub</a></strong> — articles from 14 sources, collected via Bright Data
+Crawl API and SERP</li>
+<li><strong><a href="https://battlebots-gallery.pages.dev">Fight
+Gallery</a></strong> — fight media with real YouTube thumbnails</li>
+</ul>
+<p>I ended up using a different Bright Data product for each one, which
+makes a decent tour of their API surface. Different data sources
+genuinely need different scraping approaches.</p>
+<hr />
+<h2 id="part-1-serp-api-for-reddit-sentiment">Part 1: SERP API for
+Reddit Sentiment</h2>
+<p>The H2H Predictor is the most interesting project technically. The
+pipeline: search Google for Reddit discussions about each bot, score the
+sentiment, then have an LLM write a verdict.</p>
+<h3 id="getting-structured-serp-data">Getting Structured SERP Data</h3>
+<p>I used <a href="https://brightdata.com/products/serp-api">Bright
+Data’s SERP API</a>. The key parameter is <code>brd_json=1</code>
+appended to the Google search URL. Instead of getting raw HTML, you get
+structured JSON with titles, URLs, descriptions, and positions already
+extracted.</p>
+<p>Here’s the core function (simplified from
+<code>src/bright-data.js</code>. The production version adds a 30-second
+AbortController timeout, input validation, and error handling for
+non-JSON responses):</p>
+<pre class="javascript"><code>const API_BASE = &#39;https://api.brightdata.com/request&#39;;
+
+export async function fetchSerp({ query, apiToken, zone = &#39;serp_api1&#39; }) {
+  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&amp;gl=us&amp;hl=en&amp;pws=0&amp;brd_json=1`;
+
+  const started = Date.now();
+  const res = await fetch(API_BASE, {
+    method: &#39;POST&#39;,
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      &#39;Content-Type&#39;: &#39;application/json&#39;,
+    },
+    body: JSON.stringify({ zone, url: searchUrl, format: &#39;raw&#39; }),
+  });
+
+  const durationMs = Date.now() - started;
+  const data = await res.json();
+
+  const results = [];
+  if (data.organic &amp;&amp; Array.isArray(data.organic)) {
+    for (const item of data.organic) {
+      const url = item.url || item.link || &#39;&#39;;
+      if (!url) continue; // skip featured snippets, knowledge panels
+      results.push({
+        title: item.title || &#39;&#39;,
+        url,
+        description: item.description || item.snippet || &#39;&#39;,
+        position: item.position ?? item.rank ?? results.length + 1,
+      });
+    }
+  }
+
+  return { ok: true, statusCode: res.status, durationMs, results, query };
+}</code></pre>
+<p>The <code>if (!url) continue</code> filter matters. Bright Data
+occasionally returns organic results with empty URLs (featured snippets,
+knowledge panels). Skipping those keeps downstream scoring clean.</p>
+<p>Could you use Google’s Custom Search API instead? Yes. Or scrape
+Google directly with proxies. The <code>brd_json=1</code> parameter
+saved me from writing any HTML parsing code, which is why I went this
+route.</p>
+<h3 id="fan-out-6-parallel-queries">Fan-Out: 6 Parallel Queries</h3>
+<p>A single search doesn’t give enough signal. So for each matchup, I
+build 3 queries per bot and run all 6 in parallel:</p>
+<pre class="javascript"><code>function buildQueries(bot, opponent) {
+  return [
+    `site:reddit.com/r/battlebots ${bot.name} vs ${opponent.name}`,
+    `site:reddit.com/r/battlebots ${bot.name} ${bot.weapon}`,
+    `site:reddit.com battlebots ${bot.name} opinion`,
+  ];
+}
+
+const [serpA, serpB] = await Promise.all([
+  fetchSerpFanOut(queriesA, options),
+  fetchSerpFanOut(queriesB, options),
+]);</code></pre>
+<p><code>fetchSerpFanOut</code> uses <code>Promise.allSettled</code>
+internally, so one failed query doesn’t kill the rest. In practice I get
+40-80 raw results per matchup, though after filtering for relevance
+(does the result actually mention the bot name?) the usable count is
+lower.</p>
+<h3 id="sentiment-scoring">Sentiment Scoring</h3>
+<p>Before the LLM runs, I do a fast keyword-scoring pass to give it
+structured signal. This isn’t meant to be the final answer. It’s a
+pre-filter that turns raw SERP results into positive/negative/neutral
+counts the LLM can work with:</p>
+<pre class="javascript"><code>const POSITIVE = [&#39;win&#39;, &#39;wins&#39;, &#39;won&#39;, &#39;knockout&#39;, &#39;dominant&#39;, &#39;champion&#39;, ...]; // 19 words total
+const NEGATIVE = [&#39;loss&#39;, &#39;lost&#39;, &#39;broke&#39;, &#39;broken&#39;, &#39;overrated&#39;, &#39;failed&#39;, ...]; // 19 words total
+
+export function scoreText(text) {
+  const lower = text.toLowerCase();
+  const pos = POSITIVE.reduce((n, t) =&gt; n + (lower.includes(t) ? 1 : 0), 0);
+  const neg = NEGATIVE.reduce((n, t) =&gt; n + (lower.includes(t) ? 1 : 0), 0);
+  return pos - neg;
+}</code></pre>
+<p>Full word lists are in <code>src/sentiment.js</code> in the repo.
+Fair warning: this uses <code>String.includes()</code>, so “win” matches
+“winter.” A production version should use word-boundary regex
+(<code>/\bwin\b/i</code>). The point of this step isn’t precision. It’s
+giving the LLM structured signal to work with instead of dumping raw
+text and hoping for the best.</p>
+<h3 id="the-llm-verdict">The LLM Verdict</h3>
+<p>Raw sentiment counts give you a winner, but they don’t tell a story.
+Claude Haiku 4.5 (via OpenRouter) reads all the evidence and writes a
+proper analyst verdict:</p>
+<pre class="javascript"><code>const prompt = `You are a BattleBots analyst. Analyze the Reddit evidence and produce a JSON verdict.
+
+MATCHUP: ${botA.name} (${botA.weapon}, ${botA.team}) vs ${botB.name} (${botB.weapon}, ${botB.team})
+
+SENTIMENT COUNTS:
+- ${botA.name}: ${analysisA.sentiment.positive} positive, ${analysisA.sentiment.negative} negative, ${analysisA.sentiment.neutral} neutral
+- ${botB.name}: ${analysisB.sentiment.positive} positive, ${analysisB.sentiment.negative} negative, ${analysisB.sentiment.neutral} neutral
+
+RAW REDDIT EVIDENCE:
+${evidenceBlock}
+
+Return ONLY JSON: { &quot;winner&quot;, &quot;confidence&quot;, &quot;narrative&quot;, &quot;curated_evidence&quot;: [{ &quot;quote&quot;, &quot;source_title&quot;, &quot;source_url&quot;, &quot;bot&quot;, &quot;why&quot; }] }
+
+Pick 3-5 of the MOST relevant quotes. Only use facts from the evidence. Never invent match results.`;</code></pre>
+<p>The “only use facts from the evidence” constraint is important. I
+don’t want the LLM making up fight outcomes. It’s there to synthesize
+what Reddit already said.</p>
+<hr />
+<h2 id="part-2-scraping-youtube-wiki-and-reddit">Part 2: Scraping
+YouTube, Wiki, and Reddit</h2>
+<p>The other three apps needed different data from different
+sources.</p>
+<h3 id="youtube-async-dataset-collection">YouTube: Async Dataset
+Collection</h3>
+<p>The YouTube Ranker needed real fight videos with engagement metrics.
+I used <a
+href="https://brightdata.com/products/web-scraper/youtube">Bright Data’s
+YouTube Scraper</a>. It works differently from the SERP API. You trigger
+a collection, poll for completion, then download:</p>
+<pre class="javascript"><code>// Trigger
+const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${DATASET_ID}&amp;discover_by=keyword&amp;limit_per_input=40`;
+const result = await request(&quot;POST&quot;, url, [{ keyword: &quot;BattleBots fight&quot; }]);
+const snapshotId = result.snapshot_id;
+
+// Poll (10s intervals)
+let ready = false;
+while (!ready) {
+  const progress = await request(&quot;GET&quot;, `.../progress/${snapshotId}`);
+  if (progress.status === &quot;ready&quot;) ready = true;
+  else await new Promise(r =&gt; setTimeout(r, 10_000));
+}
+
+// Download
+const videos = await request(&quot;GET&quot;, `.../snapshot/${snapshotId}?format=json`);</code></pre>
+<p>You could use yt-dlp (no quotas, free) or the YouTube Data API (10K
+daily quota units). I went with Bright Data’s scraper because it returns
+structured metadata without managing OAuth or local dependencies.
+Tradeoff: it’s async (30-90 seconds for a collection) and costs
+money.</p>
+<h3 id="wiki-getting-past-bot-protection">Wiki: Getting Past Bot
+Protection</h3>
+<p>The Encyclopedia needed detailed bot stats from the BattleBots Fandom
+wiki. Problem: Fandom uses Cloudflare protection that blocks regular
+<code>fetch()</code> requests. Returns 403 every time.</p>
+<p><a href="https://brightdata.com/products/web-unlocker">Bright Data’s
+Web Unlocker</a> handles the fingerprinting and CAPTCHA solving. Same
+API pattern, different zone:</p>
+<pre class="javascript"><code>const res = await fetch(&quot;https://api.brightdata.com/request&quot;, {
+  method: &quot;POST&quot;,
+  headers: { Authorization: `Bearer ${token}`, &quot;Content-Type&quot;: &quot;application/json&quot; },
+  body: JSON.stringify({
+    zone: &quot;web_unlocker1&quot;,
+    url: &quot;https://battlebots.fandom.com/wiki/Minotaur_(BattleBots)&quot;,
+    format: &quot;raw&quot;,
+    data_format: &quot;markdown&quot;,
+  }),
+});
+const markdown = await res.text();</code></pre>
+<p>The <code>data_format: "markdown"</code> option is the trick here.
+Instead of raw HTML you’d need to parse with cheerio, you get clean
+markdown. For a wiki page, that’s headings, tables, and lists in a
+format you can work with directly.</p>
+<p>Could you use Puppeteer with stealth plugins? Maybe. Fandom’s bot
+detection has gotten aggressive enough that I didn’t want to fight it.
+Web Unlocker was the path of least resistance.</p>
+<h3 id="gallery-reusing-youtube-thumbnails">Gallery: Reusing YouTube
+Thumbnails</h3>
+<p>The Fight Gallery needed images but I didn’t want to scrape and host
+media files. Every YouTube video has a predictable thumbnail URL:
+<code>https://img.youtube.com/vi/{VIDEO_ID}/hqdefault.jpg</code>. Free,
+always available, and the images show actual fight moments.</p>
+<h3 id="data-quality-the-hard-part">Data Quality: The Hard Part</h3>
+<p>The messiest problem wasn’t scraping. It was deduplication. YouTube
+returns the same fight uploaded by different channels with slightly
+different titles (“Tombstone vs Minotaur” vs “TOMBSTONE VS MINOTAUR —
+FULL FIGHT”). Deduplicating on video ID handled that.</p>
+<p>But across sources, the same bot appears as “End Game”, “End_Game”,
+and “EndGame.” I ended up writing a normalizer that lowercases, strips
+hyphens and underscores, and collapses whitespace:</p>
+<pre class="javascript"><code>function normalizeBot(name) {
+  return name.toLowerCase().replace(/[-_\s]+/g, &#39; &#39;).trim();
+}
+// &quot;End_Game&quot; → &quot;end game&quot;, &quot;EndGame&quot; → &quot;endgame&quot; ... still not perfect</code></pre>
+<p>Even that isn’t perfect. “EndGame” becomes “endgame” (one word) while
+“End Game” becomes “end game” (two words). I ended up adding a manual
+alias map for the 5-6 bots where this mattered. Not glamorous, but it’s
+where I spent more time than on any single API call.</p>
+<hr />
+<h2 id="part-3-architecture-and-deployment">Part 3: Architecture and
+Deployment</h2>
+<h3 id="streaming-with-ndjson">Streaming with NDJSON</h3>
+<p>The H2H prediction pipeline takes 5-10 seconds (6 SERP calls +
+sentiment + LLM). Nobody wants to stare at a spinner that long. So I
+stream results as NDJSON. Each pipeline stage emits an event, and the
+frontend renders them as they arrive:</p>
+<pre class="javascript"><code>// functions/api/predict-stream.js (from actual source)
+export async function onRequestPost(context) {
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const encoder = new TextEncoder();
+  const emit = (event) =&gt; writer.write(encoder.encode(JSON.stringify(event) + &#39;\n&#39;));
+
+  context.waitUntil((async () =&gt; {
+    try {
+      await predict(body.botA, body.botB, { /* env vars */ }, emit);
+    } catch (err) {
+      emit({ type: &#39;error&#39;, error: err.message });
+    } finally {
+      writer.close();
+    }
+  })());
+
+  return new Response(readable, {
+    headers: { &#39;Content-Type&#39;: &#39;text/plain; charset=utf-8&#39;, &#39;Cache-Control&#39;: &#39;no-cache&#39; },
+  });
+}</code></pre>
+<p>The pipeline emits typed events: <code>start</code>,
+<code>cache_hit</code>, <code>serp_done</code>, <code>sentiment</code>,
+<code>done</code>. If MongoDB has a cached result, it short-circuits
+with <code>cache_hit</code> and skips the SERP and LLM calls
+entirely.</p>
+<h3 id="mongodb-caching">MongoDB Caching</h3>
+<p>SERP queries and LLM calls cost money. Running the same matchup twice
+is wasteful. MongoDB Atlas (free M0 tier) with a 24-hour TTL:</p>
+<pre class="javascript"><code>export function matchupKey(botAId, botBId) {
+  return [botAId, botBId].sort().join(&#39;::&#39;);
+}
+
+export async function getCachedPrediction(uri, botAId, botBId) {
+  const client = await getClient(uri);
+  if (!client) return null; // graceful degradation — app works without DB
+
+  const db = client.db(&#39;battlebots&#39;);
+  const key = matchupKey(botAId, botBId);
+  const doc = await db.collection(&#39;predictions&#39;).findOne(
+    { key, expiresAt: { $gt: new Date() } },
+    { sort: { createdAt: -1 } }
+  );
+  return doc?.result || null;
+}</code></pre>
+<p>The <code>matchupKey</code> sort means “minotaur::tombstone” and
+“tombstone::minotaur” hit the same cache entry. If MongoDB is down, the
+app still works. Just slower. Cache writes use
+<code>.catch(() =&gt; {})</code> so database issues never break the user
+experience.</p>
+<p>MongoDB also auto-deletes expired docs via a TTL index, so the 512MB
+free tier doesn’t fill up:</p>
+<pre class="javascript"><code>await col.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });</code></pre>
+<p>The <code>mongodb</code> driver works on Cloudflare Workers with the
+<code>nodejs_compat</code> compatibility flag in
+<code>wrangler.toml</code>. Connection config is optimized for
+serverless: <code>maxPoolSize: 1</code>, 5-second connect timeout,
+10-second socket timeout.</p>
+<h3 id="why-cloudflare-pages">Why Cloudflare Pages</h3>
+<p>I went with Cloudflare Pages because the prediction pipeline needs
+long wall-clock time (5-10 seconds of I/O wait) and streaming support.
+Cloudflare’s edge runtime doesn’t charge for I/O wait time. The 10ms CPU
+time limit on the free tier sounds restrictive, but these functions
+spend almost all their time waiting on <code>fetch()</code> calls, which
+doesn’t count.</p>
+<p>Render’s free tier sleeps after 15 minutes and cold starts take 30+
+seconds. For a demo project, that first impression matters.</p>
+<p>All five projects deploy as separate Cloudflare Pages sites with
+independent builds. If the news scraper breaks, the encyclopedia still
+works.</p>
+<h3 id="what-this-actually-costs">What This Actually Costs</h3>
+<p>I tracked costs over a month of development and testing. About 200
+matchup predictions, plus scraper runs:</p>
+<table>
+<colgroup>
+<col style="width: 37%" />
+<col style="width: 25%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Service</th>
+<th>Cost</th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Cloudflare Pages (5 sites)</td>
+<td>$0</td>
+<td>Free tier: 500 builds/mo, 100K invocations/day</td>
+</tr>
+<tr class="even">
+<td>MongoDB Atlas</td>
+<td>$0</td>
+<td>Free M0 tier: 512MB storage</td>
+</tr>
+<tr class="odd">
+<td>Bright Data SERP API</td>
+<td>~$3</td>
+<td>~200 predictions x 6 queries each. Pay per request</td>
+</tr>
+<tr class="even">
+<td>OpenRouter (Claude Haiku 4.5)</td>
+<td>~$2</td>
+<td>~200 LLM calls at $1/M input, $5/M output. Check <a
+href="https://openrouter.ai">openrouter.ai</a> for current pricing</td>
+</tr>
+<tr class="odd">
+<td>Bright Data YouTube/Unlocker</td>
+<td>~$1</td>
+<td>One-time scraper runs during development</td>
+</tr>
+<tr class="even">
+<td><strong>Total</strong></td>
+<td><strong>~$6</strong></td>
+<td>Cache keeps repeat costs near zero</td>
+</tr>
+</tbody>
+</table>
+<p>That ~$6 was the total during development and testing. In production
+with caching enabled, most matchups hit cache and ongoing API costs are
+near zero. The hosting (Cloudflare + MongoDB) stays free
+indefinitely.</p>
+<hr />
+<h2 id="the-live-suite">The Live Suite</h2>
+<p>All five projects, all connected:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 14%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Project</th>
+<th>URL</th>
+<th>Bright Data Product</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>H2H Predictor</td>
+<td><a
+href="https://battlebots-h2h.pages.dev">battlebots-h2h.pages.dev</a></td>
+<td>SERP API</td>
+</tr>
+<tr class="even">
+<td>Encyclopedia</td>
+<td><a
+href="https://battlebots-encyclopedia.pages.dev">battlebots-encyclopedia.pages.dev</a></td>
+<td>Web Unlocker</td>
+</tr>
+<tr class="odd">
+<td>YouTube Ranker</td>
+<td><a
+href="https://battlebots-youtube.pages.dev">battlebots-youtube.pages.dev</a></td>
+<td>YouTube Scraper</td>
+</tr>
+<tr class="even">
+<td>News Hub</td>
+<td><a
+href="https://battlebots-news.pages.dev">battlebots-news.pages.dev</a></td>
+<td>Crawl API + SERP</td>
+</tr>
+<tr class="odd">
+<td>Fight Gallery</td>
+<td><a
+href="https://battlebots-gallery.pages.dev">battlebots-gallery.pages.dev</a></td>
+<td>YouTube thumbnails</td>
+</tr>
+</tbody>
+</table>
+<p>All the code is open source: <a
+href="https://github.com/yaronbeen/bright-data-x-battle-bots">github.com/yaronbeen/bright-data-x-battle-bots</a>.
+Built for the <a
+href="https://brightdata.com/lp/battelbots">#battlebotsdev
+challenge</a>.</p>
+<p>Five different scraping patterns, five live apps, ~$6 total during
+development. The scraping was the easy part. Data normalization and
+deduplication took longer than everything else combined.</p>

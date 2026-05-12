@@ -13,19 +13,31 @@ export async function fetchSerp({ query, country = 'us', apiToken, zone = 'serp_
   const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&gl=${country}&hl=en&pws=0&brd_json=1`;
 
   const started = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-  const res = await fetchImpl(API_BASE, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      zone,
-      url: searchUrl,
-      format: 'raw', // brd_json=1 returns structured JSON directly
-    }),
-  });
+  let res;
+  try {
+    res = await fetchImpl(API_BASE, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        zone,
+        url: searchUrl,
+        format: 'raw', // brd_json=1 returns structured JSON directly
+      }),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(timeout);
+    const durationMs = Date.now() - started;
+    const msg = err.name === 'AbortError' ? 'SERP request timed out (30s)' : err.message;
+    return { ok: false, statusCode: 0, error: msg, durationMs, results: [], query };
+  }
+  clearTimeout(timeout);
 
   const durationMs = Date.now() - started;
 

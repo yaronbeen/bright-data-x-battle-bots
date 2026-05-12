@@ -1,5 +1,27 @@
 # LEARNINGS.md
 
+## 2026-04-29 — Session 6 (MongoDB Atlas integration)
+
+### MongoDB driver works on Cloudflare Workers with nodejs_compat
+- The `mongodb` npm package (6.x) works on Cloudflare Workers when `compatibility_flags = ["nodejs_compat"]` is set in `wrangler.toml`.
+- Bundle size is ~6.6MB uncompressed but compresses under the Workers limit.
+- The Atlas Data API was deprecated/removed in 2025 — driver is the only path now.
+- For serverless, use `maxPoolSize: 1` and short timeouts (5s connect, 10s socket).
+
+### MongoDB Atlas M0 free tier setup
+- 512MB storage, shared cluster, sufficient for prediction caching.
+- Network access MUST be set to `0.0.0.0/0` for Cloudflare Workers (no fixed IPs).
+- TTL indexes with `expireAfterSeconds: 0` auto-delete docs based on an `expiresAt` field.
+- Connection string goes as `MONGODB_URI` env var / Cloudflare secret.
+
+### Hosting comparison for this project
+- **Cloudflare Pages**: Best for us — zero cold starts, 30s wall clock (fits our 25-30s pipeline), free unlimited bandwidth.
+- **Vercel Hobby**: 10s serverless timeout — kills our pipeline. Non-starter.
+- **Render Free**: 30-50s cold starts after 15min idle — terrible for a demo. Only 1 free web service (we have 5 sites).
+
+### SERP 520s resolved
+- The Bright Data SERP 520 errors from session 5 appear to have resolved themselves (zone issue / transient). All 6 queries returned 200 with results during testing.
+
 ## 2026-04-28 — Session 5 (E2E testing, bug fixes, canonical sources)
 
 ### Wrangler Pages Functions deployment gotcha

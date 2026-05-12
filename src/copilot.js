@@ -9,6 +9,7 @@ import { fetchSerpFanOut } from './bright-data.js';
 import { analyzeResults } from './sentiment.js';
 import { synthesizeVerdict } from './llm.js';
 import { getBot, ROSTER } from './roster.js';
+import { getCachedPrediction, cachePrediction } from './db.js';
 
 function buildQueries(bot, opponent) {
   return [
@@ -30,7 +31,7 @@ export function validateMatchup(botAId, botBId) {
  * Run the full prediction pipeline.
  * @param {string} botAId
  * @param {string} botBId
- * @param {object} options - apiToken, zone, llmApiKey, llmModel, llmBaseUrl, fetchImpl
+ * @param {object} options - apiToken, zone, llmApiKey, llmModel, llmBaseUrl, mongodbUri, fetchImpl
  * @param {(event: object) => void} [onProgress] - streaming callback
  */
 export async function predict(botAId, botBId, options = {}, onProgress) {
@@ -42,6 +43,21 @@ export async function predict(botAId, botBId, options = {}, onProgress) {
   const botB = getBot(botBId);
 
   emit({ type: 'start', botA, botB });
+
+  // --- Cache check ---
+  if (options.mongodbUri) {
+    try {
+      const cached = await getCachedPrediction(options.mongodbUri, botAId, botBId);
+      if (cached) {
+        emit({ type: 'cache_hit' });
+        emit({ type: 'sentiment', botA: cached.botA, botB: cached.botB, verdict: cached.verdict });
+        emit({ type: 'done', result: { ...cached, cached: true } });
+        return { ...cached, cached: true };
+      }
+    } catch (err) {
+      // Cache miss or error — continue with live pipeline
+    }
+  }
 
   // --- SERP fan-out (parallel, both bots) ---
   const queriesA = buildQueries(botA, botB);
@@ -57,6 +73,29 @@ export async function predict(botAId, botBId, options = {}, onProgress) {
   // --- Sentiment scoring ---
   const analysisA = analyzeResults(serpA.results, botA.name);
   const analysisB = analyzeResults(serpB.results, botB.name);
+  const totalResults = serpA.results.length + serpB.results.length;
+
+  // Not enough Reddit discussion — suggest trying another matchup
+  if (totalResults === 0) {
+    const noDataResult = {
+      ok: true,
+      botA: { ...botA, sentiment: analysisA.sentiment, totalRelevant: 0 },
+      botB: { ...botB, sentiment: analysisB.sentiment, totalRelevant: 0 },
+      verdict: { winner: 'Not enough data', winnerId: null, confidence: 'no-data' },
+      narrative: `Not enough Reddit discussion found for ${botA.name} vs ${botB.name}. Try a more popular matchup like Minotaur vs Tombstone or Hydra vs Tantrum.`,
+      curatedEvidence: [],
+      allEvidence: [],
+      trace: [...serpA.trace, ...serpB.trace],
+      llm: { enabled: false, used: false },
+      noData: true,
+    };
+    emit({ type: 'sentiment', botA: noDataResult.botA, botB: noDataResult.botB, verdict: noDataResult.verdict });
+    if (options.mongodbUri) {
+      cachePrediction(options.mongodbUri, botAId, botBId, noDataResult).catch(() => {});
+    }
+    emit({ type: 'done', result: noDataResult });
+    return noDataResult;
+  }
 
   // Deterministic verdict from sentiment counts
   const scoreA = analysisA.sentiment.positive - analysisA.sentiment.negative;
@@ -121,6 +160,11 @@ export async function predict(botAId, botBId, options = {}, onProgress) {
     trace: [...serpA.trace, ...serpB.trace],
     llm,
   };
+
+  // --- Cache write (fire-and-forget) ---
+  if (options.mongodbUri) {
+    cachePrediction(options.mongodbUri, botAId, botBId, result).catch(() => {});
+  }
 
   emit({ type: 'done', result });
   return result;

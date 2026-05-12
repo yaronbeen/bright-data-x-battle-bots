@@ -45,7 +45,7 @@ function render() {
     <div class="bot-card" data-name="${esc(b.name)}">
       ${b.image
         ? `<img class="bot-card-img" src="${esc(b.image)}" alt="${esc(b.name)}" loading="lazy" />`
-        : `<div class="bot-card-placeholder">${esc(b.name[0])}</div>`
+        : `<div class="bot-card-initials">${esc(b.name[0])}</div>`
       }
       <h3>${esc(b.name)}</h3>
       <p class="card-meta">${esc(b.weapon)} · ${esc(b.team)}</p>
@@ -69,8 +69,15 @@ grid.addEventListener('click', e => {
 });
 
 function openModal(b) {
-  document.querySelector('#modal-img').src = b.image || '';
-  document.querySelector('#modal-img').alt = b.name;
+  const modalImg = document.querySelector('#modal-img');
+  if (b.image) {
+    modalImg.src = b.image;
+    modalImg.alt = b.name;
+    modalImg.style.display = '';
+  } else {
+    modalImg.style.display = 'none';
+    modalImg.alt = b.name;
+  }
   document.querySelector('#modal-name').textContent = b.name;
   document.querySelector('#modal-team').textContent = `${b.team} · ${b.country}`;
   document.querySelector('#modal-weapon').textContent = b.weapon;

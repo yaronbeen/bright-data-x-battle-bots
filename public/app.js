@@ -125,6 +125,10 @@ function handleEvent(ev) {
       break;
     }
 
+    case 'cache_hit':
+      statusText.textContent = 'Cached result found — loading instantly!';
+      break;
+
     case 'sentiment':
       statusText.textContent = 'Sentiment scored. Generating AI verdict…';
       showEarlySentiment(ev);
@@ -253,10 +257,11 @@ function buildVerdictCard(data) {
     cel.innerHTML = '';
   }
 
-  // LLM note
+  // LLM note + cache indicator
+  const cacheTag = data.cached ? ' · ⚡ cached result' : '';
   document.querySelector('#llm-note').textContent = data.llm?.used
-    ? `Analysis by ${data.llm.model} · based on ${data.botA.totalRelevant + data.botB.totalRelevant} Reddit mentions`
-    : data.llm?.error ? `AI unavailable: ${data.llm.error}` : '';
+    ? `Analysis by ${data.llm.model} · based on ${data.botA.totalRelevant + data.botB.totalRelevant} Reddit mentions${cacheTag}`
+    : data.llm?.error ? `AI unavailable: ${data.llm.error}${cacheTag}` : cacheTag.trim();
 }
 
 function renderMiniBars(sel, s) {

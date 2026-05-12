@@ -99,10 +99,7 @@
   }
 
   function imageFor(item) {
-    const label = TYPE_LABELS[item.type] || 'Media';
-    const title = item.title.length > 34 ? `${item.title.slice(0, 31)}...` : item.title;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 220"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#111827"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="320" height="220" rx="18" fill="url(#g)"/><circle cx="160" cy="88" r="36" fill="rgba(255,255,255,.16)"/><path d="M148 68v40l36-20z" fill="white"/><text x="160" y="154" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="18" font-weight="800">${esc(label)}</text><text x="160" y="181" text-anchor="middle" fill="rgba(255,255,255,.78)" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600">${esc(title)}</text></svg>`;
-    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+    return item.imageUrl;
   }
 
   // ── Render Gallery ──
