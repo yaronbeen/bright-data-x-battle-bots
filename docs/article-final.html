@@ -1,7 +1,7 @@
 <h1
-id="i-built-5-battlebots-apps-with-bright-data.-heres-what-actually-worked.">I
-Built 5 BattleBots Apps with Bright Data. Here’s What Actually
-Worked.</h1>
+id="i-built-5-battlebots-apps-for-6.-heres-every-scraping-pattern-i-used.">I
+Built 5 BattleBots Apps for $6. Here’s Every Scraping Pattern I
+Used.</h1>
 <blockquote>
 <p>“Reddit leans toward Minotaur. Confidence: strong. Fans consistently
 cite its drum reliability and knockout power.”</p>
@@ -11,29 +11,30 @@ threads and writing a sports-analyst-style verdict about a robot combat
 matchup. You pick two BattleBots, click a button, and 8 seconds later
 you get a cited, sourced opinion on who the internet thinks would
 win.</p>
-<p>I built this (and four other apps) for the <a
+<p>Total cost to build and run all five apps: about $6. Hosting is free
+forever.</p>
+<p>I built this for the <a
 href="https://brightdata.com/lp/battelbots">Bright Data x BattleBots
 developer challenge</a> (#battlebotsdev). Full disclosure: I’m a Bright
-Data DevRel ambassador, so take my product opinions with that context.
-But the code is open source, the sites are live, and I’ll tell you where
-things got messy.</p>
-<p>The BattleBots angle is just the excuse. The real story is: what
+Data DevRel ambassador. The code is open source and every site is live.
+Judge the work, not the affiliation.</p>
+<p>The BattleBots angle is just the excuse. The real question: what
 happens when you try to pull structured data from Google, YouTube,
-protected wikis, and Reddit, then turn it into something people can
-actually use?</p>
-<h2 id="what-i-actually-built">What I Actually Built</h2>
-<p>Five apps. Each one solves a different data problem. Each one ended
-up needing a different scraping approach. Here they are, all live:</p>
+protected wikis, and Reddit, then turn it all into something useful?</p>
+<h2 id="five-apps-four-bright-data-products-one-repo">Five Apps, Four
+Bright Data Products, One Repo</h2>
 <table>
 <colgroup>
-<col style="width: 30%" />
-<col style="width: 43%" />
-<col style="width: 26%" />
+<col style="width: 17%" />
+<col style="width: 25%" />
+<col style="width: 41%" />
+<col style="width: 15%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th>Project</th>
 <th>What it does</th>
+<th>Bright Data product</th>
 <th>Try it</th>
 </tr>
 </thead>
@@ -41,186 +42,172 @@ up needing a different scraping approach. Here they are, all live:</p>
 <tr class="odd">
 <td><strong>H2H Predictor</strong></td>
 <td>Pick two robots, get a Reddit-powered verdict</td>
-<td><a
-href="https://battlebots-h2h.pages.dev">battlebots-h2h.pages.dev</a></td>
+<td>SERP API</td>
+<td><a href="https://battlebots-h2h.pages.dev">Live</a></td>
 </tr>
 <tr class="even">
 <td><strong>Bot Encyclopedia</strong></td>
 <td>30 robots with stats, weapons, win rates</td>
-<td><a
-href="https://battlebots-encyclopedia.pages.dev">battlebots-encyclopedia.pages.dev</a></td>
+<td>Web Unlocker</td>
+<td><a href="https://battlebots-encyclopedia.pages.dev">Live</a></td>
 </tr>
 <tr class="odd">
 <td><strong>YouTube Ranker</strong></td>
 <td>Real fight videos ranked by engagement</td>
-<td><a
-href="https://battlebots-youtube.pages.dev">battlebots-youtube.pages.dev</a></td>
+<td>YouTube Scraper</td>
+<td><a href="https://battlebots-youtube.pages.dev">Live</a></td>
 </tr>
 <tr class="even">
 <td><strong>News Hub</strong></td>
-<td>Latest BattleBots articles from 14 sources</td>
-<td><a
-href="https://battlebots-news.pages.dev">battlebots-news.pages.dev</a></td>
+<td>Latest BattleBots articles from across the web</td>
+<td>Crawl API + SERP</td>
+<td><a href="https://battlebots-news.pages.dev">Live</a></td>
 </tr>
 <tr class="odd">
 <td><strong>Fight Gallery</strong></td>
-<td>Fight media with real YouTube thumbnails</td>
-<td><a
-href="https://battlebots-gallery.pages.dev">battlebots-gallery.pages.dev</a></td>
+<td>Visual fight moments with real thumbnails</td>
+<td>Built on YouTube Scraper data</td>
+<td><a href="https://battlebots-gallery.pages.dev">Live</a></td>
 </tr>
 </tbody>
 </table>
 <p>All the code: <a
 href="https://github.com/yaronbeen/bright-data-x-battle-bots">github.com/yaronbeen/bright-data-x-battle-bots</a></p>
-<p>Now let me walk through each one and the data problem it solved.</p>
 <hr />
-<h2 id="who-does-reddit-think-wins-serp-api">1. “Who Does Reddit Think
-Wins?” (SERP API)</h2>
-<h3 id="the-idea">The idea</h3>
-<p>BattleBots fans argue constantly on Reddit about which robot would
-beat which. I wanted to turn those arguments into a structured verdict.
-Pick Tombstone vs Minotaur, and instead of reading 40 Reddit threads
-yourself, let the machine do it.</p>
-<h3 id="the-data-problem">The data problem</h3>
-<p>I needed Google search results for Reddit discussions about specific
-robots. Not the Reddit API (which limits what you can search). Google’s
-index of Reddit, which is much richer.</p>
-<h3 id="why-serp-api">Why SERP API</h3>
-<p>Bright Data’s <a href="https://brightdata.com/products/serp-api">SERP
-API</a> lets you send a Google search URL and get back structured JSON
-instead of raw HTML. The magic parameter is <code>brd_json=1</code>.
-Append that to any Google search URL, and Bright Data parses the results
-for you: titles, URLs, descriptions, ranking positions. No HTML parsing.
-No Puppeteer. Just a POST request and clean data back.</p>
-<p>I could’ve used Google’s Custom Search API (100 free queries/day,
-then paid) or scraped Google directly with rotating proxies. I went with
-SERP API because <code>brd_json=1</code> meant zero parsing code on my
-end and I could focus on the fun part: the sentiment analysis.</p>
-<h3 id="how-the-pipeline-works">How the pipeline works</h3>
-<p>For each matchup, I fire 6 Google searches in parallel (3 per bot:
-“bot vs opponent”, “bot + weapon type”, “bot + opinion”). That gives me
-40-80 Reddit results. I run keyword scoring to tag each result as
-positive, negative, or neutral. Then Claude Haiku 4.5 reads the scored
-evidence and writes a verdict with cited Reddit quotes.</p>
-<p>The keyword scoring is rough on purpose. It’s not trying to be
-accurate. It’s giving the LLM structured context so it can write a
-better narrative than it would from raw text alone.</p>
-<p>The result looks like a sports analyst’s take, with actual Reddit
-sources backing every claim. <a
-href="https://battlebots-h2h.pages.dev">Try it yourself</a>.</p>
+<h2 id="how-i-turned-reddit-arguments-into-ai-verdicts">How I Turned
+Reddit Arguments Into AI Verdicts</h2>
+<p>This is the project I’m most proud of. BattleBots fans argue
+constantly on Reddit about which robot would beat which. I wanted to
+turn those arguments into a structured, cited verdict.</p>
+<p><strong>What Bright Data’s SERP API does:</strong> You give it a
+Google search URL, it gives you back structured JSON. The key is a
+parameter called <code>brd_json=1</code>. Append that to any Google
+search, and instead of raw HTML you get parsed results: titles, URLs,
+descriptions, ranking positions. One POST request, clean data back.</p>
+<p>I chose this over Google’s Custom Search API (which I’ve used before)
+because <code>brd_json=1</code> meant zero HTML parsing on my end.
+Google Custom Search would work too, especially at my volume (~200
+predictions over a month, well within the free tier). But I wanted to
+focus time on the sentiment pipeline, not on parsing search results.</p>
+<p>Here’s the core of it:</p>
+<pre class="javascript"><code>// One POST to Bright Data, structured Google results back
+const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&amp;gl=us&amp;hl=en&amp;brd_json=1`;
+
+const res = await fetch(&#39;https://api.brightdata.com/request&#39;, {
+  method: &#39;POST&#39;,
+  headers: { Authorization: `Bearer ${apiToken}`, &#39;Content-Type&#39;: &#39;application/json&#39; },
+  body: JSON.stringify({ zone: &#39;web_unlocker1&#39;, url: searchUrl, format: &#39;raw&#39; }),
+});
+
+const data = await res.json();
+// data.organic[] = [{ title, url, description, position }, ...]</code></pre>
+<p>For each matchup I fire 6 of these in parallel (3 per bot), collect
+40-80 Reddit results, run quick keyword scoring to give the LLM
+structured signal, then Claude Haiku 4.5 writes the actual verdict with
+cited quotes.</p>
+<pre class="javascript"><code>function buildQueries(bot, opponent) {
+  return [
+    `site:reddit.com/r/battlebots ${bot.name} vs ${opponent.name}`,
+    `site:reddit.com/r/battlebots ${bot.name} ${bot.weapon}`,
+    `site:reddit.com battlebots ${bot.name} opinion`,
+  ];
+}</code></pre>
+<p>The keyword scoring is deliberately rough. 19 positive words, 19
+negative words, <code>String.includes()</code>. It’s a pre-filter, not a
+precision instrument. The LLM is what turns noisy counts into a coherent
+narrative. <a href="https://battlebots-h2h.pages.dev">Try a matchup
+yourself.</a></p>
 <hr />
-<h2 id="every-robot-structured-web-unlocker">2. “Every Robot,
-Structured” (Web Unlocker)</h2>
-<h3 id="the-idea-1">The idea</h3>
-<p>A searchable database of 30 BattleBots with win/loss records, weapon
-types, team info, season appearances. Think of it as a Pokedex for
-combat robots.</p>
-<h3 id="the-data-problem-1">The data problem</h3>
-<p>The best source for this data is the BattleBots Fandom wiki. Detailed
-pages for every robot, updated by fans after every season. One problem:
-Fandom uses aggressive bot protection. A regular <code>fetch()</code>
-call returns 403 every time. They’re behind Cloudflare’s anti-bot layer,
-which detects headless browsers, blocks datacenter IPs, and serves
-CAPTCHAs.</p>
-<h3 id="why-web-unlocker">Why Web Unlocker</h3>
-<p>Bright Data’s <a
-href="https://brightdata.com/products/web-unlocker">Web Unlocker</a> is
-essentially a proxy that handles all the anti-bot stuff for you: browser
-fingerprinting, CAPTCHA solving, IP rotation, cookie management. You
-send it a URL, it returns the page content as if a real human visited it
-in a real browser.</p>
-<p>The killer feature for me was <code>data_format: "markdown"</code>.
-Instead of getting back raw HTML that I’d need to parse with cheerio or
-jsdom, I get clean markdown. For a wiki page, that’s almost perfect:
-headings, tables, lists, all preserved and ready to work with.</p>
-<p>I scraped 8 pages total (5 bot profiles + 3 canonical sources). The
-output feeds the encyclopedia frontend directly.</p>
-<p>Could I have used Puppeteer with stealth plugins? Possibly. But
-Fandom’s detection has gotten aggressive enough that I didn’t want to
-spend days fighting it. Web Unlocker got me the data in an afternoon. <a
-href="https://battlebots-encyclopedia.pages.dev">See the
-encyclopedia</a>.</p>
+<h2 id="how-i-scraped-a-wiki-that-blocks-every-scraper">How I Scraped a
+Wiki That Blocks Every Scraper</h2>
+<p>The encyclopedia needed detailed bot stats from the BattleBots Fandom
+wiki. Problem: try
+<code>fetch("https://battlebots.fandom.com/wiki/Minotaur")</code> and
+you get a 403. Every time. Fandom runs aggressive Cloudflare bot
+protection that detects headless browsers, blocks datacenter IPs, and
+serves CAPTCHAs.</p>
+<p><strong>What Bright Data’s Web Unlocker does:</strong> It handles
+browser fingerprinting, CAPTCHA solving, and IP rotation behind a single
+API call. You send a URL, it returns the page content as if a real
+browser visited it. It’s not just a proxy. It’s a full request pipeline
+that manages cookies, TLS fingerprints, and challenge responses
+automatically.</p>
+<p>The feature that sold me: <code>data_format: "markdown"</code>.
+Instead of raw HTML I’d need to parse with cheerio, I get clean
+markdown. For a wiki page, that’s headings, tables, stats, all in a
+format I can work with directly.</p>
+<pre class="javascript"><code>const res = await fetch(&quot;https://api.brightdata.com/request&quot;, {
+  method: &quot;POST&quot;,
+  headers: { Authorization: `Bearer ${token}`, &quot;Content-Type&quot;: &quot;application/json&quot; },
+  body: JSON.stringify({
+    zone: &quot;web_unlocker1&quot;,
+    url: &quot;https://battlebots.fandom.com/wiki/Minotaur_(BattleBots)&quot;,
+    format: &quot;raw&quot;,
+    data_format: &quot;markdown&quot;,  // ← this is the trick
+  }),
+});
+const markdown = await res.text(); // clean wiki content, no HTML parsing needed</code></pre>
+<p>Could I have used Puppeteer with stealth plugins? Maybe. I’ve done it
+on other sites. Fandom’s detection has gotten aggressive enough that I
+chose not to fight it for this project. Your mileage may vary.</p>
+<p>I scraped 8 pages total (5 bot profiles + 3 reference pages). The
+rest of the 30-bot roster was built from structured data I compiled from
+the scraped wiki content plus official BattleBots sources. <a
+href="https://battlebots-encyclopedia.pages.dev">Browse the
+encyclopedia.</a></p>
 <hr />
-<h2 id="most-watched-fights-ranked-youtube-scraper">3. “Most Watched
-Fights, Ranked” (YouTube Scraper)</h2>
-<h3 id="the-idea-2">The idea</h3>
-<p>Which BattleBots fights have the most views on YouTube? Which ones
-get the most comments? I wanted a leaderboard that you can sort by
-views, likes, comments, or controversy (comment-to-like ratio).</p>
-<h3 id="the-data-problem-2">The data problem</h3>
-<p>YouTube has an API, but it’s quota-limited (10,000 units/day, a
-single search costs 100 units) and requires OAuth setup. I didn’t need
-real-time data. I needed a one-time collection of fight videos with
-their engagement metrics.</p>
-<h3 id="why-youtube-scraper">Why YouTube Scraper</h3>
-<p>Bright Data’s <a
-href="https://brightdata.com/products/web-scraper/youtube">YouTube
-Scraper</a> (part of their Web Scraper API) works differently from the
-other products. It’s asynchronous. You tell it “find YouTube videos
-matching this keyword,” it runs the collection in the background, and
-you poll until it’s done. Takes 30-90 seconds, then you download
-structured results: title, URL, thumbnail, views, likes, comments,
-duration, upload date.</p>
-<p>I could’ve used yt-dlp (free, no quotas) to extract video metadata.
-The tradeoff: yt-dlp needs to be installed locally and you’d have to
-handle the YouTube search part separately. Bright Data’s scraper handles
-search + metadata extraction as one step.</p>
-<p>The real win was getting real thumbnails. Every YouTube video has a
-thumbnail at
-<code>https://img.youtube.com/vi/{VIDEO_ID}/hqdefault.jpg</code>. I used
-these across both the YouTube Ranker and the Fight Gallery, so two apps
-got real images from one data source. <a
-href="https://battlebots-youtube.pages.dev">Check the ranker</a>.</p>
+<h2 id="real-fight-videos-zero-youtube-api-quota-headaches">16 Real
+Fight Videos, Zero YouTube API Quota Headaches</h2>
+<p>YouTube’s official API gives you 10,000 quota units per day. A single
+search costs 100 units. That’s 100 searches before you’re locked out
+until tomorrow. For a one-time data collection, it works. For iteration
+during development, it’s annoying.</p>
+<p><strong>What Bright Data’s YouTube Scraper does:</strong> It’s part
+of their <a
+href="https://brightdata.com/products/web-scraper/youtube">Web Scraper
+API</a>. You give it a keyword, it searches YouTube, collects video
+metadata (title, URL, thumbnail, views, likes, comments, duration,
+upload date), and returns structured JSON. The catch: it’s async. You
+trigger a collection, poll for completion (30-90 seconds), then download
+results.</p>
+<p>I could’ve used yt-dlp, which is free, has no quotas, and handles
+search + metadata in a single command. It’s a legitimate alternative. I
+went with Bright Data’s scraper because I was already using their other
+APIs and the structured output format was consistent with the rest of my
+pipeline.</p>
+<p>The bonus: every YouTube video has a thumbnail at
+<code>https://img.youtube.com/vi/{VIDEO_ID}/hqdefault.jpg</code>. Those
+video IDs power both the YouTube Ranker and the Fight Gallery. Two apps,
+one data source, zero image hosting costs.</p>
+<p><a href="https://battlebots-youtube.pages.dev">See the rankings.</a>
+| <a href="https://battlebots-gallery.pages.dev">Browse the
+gallery.</a></p>
 <hr />
-<h2 id="whats-happening-in-battlebots-crawl-api-serp">4. “What’s
-Happening in BattleBots?” (Crawl API + SERP)</h2>
-<h3 id="the-idea-3">The idea</h3>
-<p>An aggregated news feed pulling from battlebots.com, Reddit, the
-wiki, Hollywood Reporter, and anywhere else that publishes BattleBots
-content.</p>
-<h3 id="the-data-problem-3">The data problem</h3>
-<p>News lives on a lot of different websites. I needed to both find
-articles (search) and read their content (crawl). Two different
-operations.</p>
-<h3 id="why-crawl-api-serp">Why Crawl API + SERP</h3>
-<p>For discovery, I used the same SERP API from the H2H project.
-Searching Google for “battlebots 2025 news” returns real articles from
-real publishers.</p>
-<p>For content extraction, I used Bright Data’s Crawl API. Same
-POST-to-<code>/request</code> pattern as the other products, just with a
-<code>crawl_api</code> zone. It fetches the page, handles any bot
-protection, and returns the content. With
-<code>data_format: "markdown"</code>, I get clean readable text instead
-of HTML soup.</p>
-<p>The News Hub now shows 28 articles from 14 different sources:
-battlebots.com, Hollywood Reporter, Reddit, the wiki, TripAdvisor
-(people review the live show), and more. <a
-href="https://battlebots-news.pages.dev">Browse the news</a>.</p>
+<h2 id="pulling-news-from-14-sources-without-14-scrapers">Pulling News
+From 14 Sources Without 14 Scrapers</h2>
+<p>The News Hub needed articles from across the web: battlebots.com,
+Reddit, the Fandom wiki, Hollywood Reporter, TripAdvisor (people review
+the live Vegas show), and more.</p>
+<p>I used two Bright Data products together. <strong>SERP API</strong>
+to discover articles (searching Google for “battlebots 2025 news”
+returns real articles from real publishers). Then <strong>Crawl
+API</strong> to extract content from the pages I found. The Crawl API
+works the same way as Web Unlocker (POST a URL, get content back) but is
+designed for fetching page content rather than bypassing bot protection.
+With <code>data_format: "markdown"</code>, I get clean text instead of
+HTML.</p>
+<p>I used SERP to find the articles, then curated the results into the
+news feed manually. The scraper in the repo handles the 3 canonical
+sources (battlebots.com, wiki, Reddit). The broader article discovery
+was done via SERP queries during development.</p>
+<p><a href="https://battlebots-news.pages.dev">Read the latest.</a></p>
 <hr />
-<h2 id="fight-moments-captured-youtube-thumbnails">5. “Fight Moments,
-Captured” (YouTube Thumbnails)</h2>
-<h3 id="the-idea-4">The idea</h3>
-<p>A visual gallery of fight moments. Something you can browse, filter
-by bot or season, and click into.</p>
-<h3 id="the-data-problem-4">The data problem</h3>
-<p>I needed actual fight images. Scraping and hosting images directly
-raises copyright issues and storage costs. I needed a free,
-always-available source of real fight visuals.</p>
-<h3 id="the-thumbnail-trick">The thumbnail trick</h3>
-<p>This one didn’t need a separate Bright Data product. Every YouTube
-video has a publicly available thumbnail at a predictable URL. I reused
-the video IDs from the YouTube Scraper data and constructed thumbnail
-URLs automatically.</p>
-<p>The gallery shows 35 fight moments with real images, filterable by
-media type, bot, and season. No images hosted on my servers. Zero
-storage cost. <a href="https://battlebots-gallery.pages.dev">See the
-gallery</a>.</p>
-<hr />
-<h2 id="the-part-nobody-talks-about-data-cleanup">The Part Nobody Talks
-About: Data Cleanup</h2>
-<p>Here’s the thing nobody mentions in “I built X with Y API” posts: the
-scraping is the easy part. The data cleanup is where you actually spend
-your time.</p>
+<h2
+id="the-part-nobody-talks-about-why-data-cleanup-took-longer-than-scraping">The
+Part Nobody Talks About: Why Data Cleanup Took Longer Than Scraping</h2>
+<p>Here’s what nobody mentions in “I built X with Y API” posts. The
+scraping worked. Every API call returned data. The problem was making
+that data agree with itself.</p>
 <p>YouTube returns the same fight uploaded by different channels.
 “Tombstone vs Minotaur” and “TOMBSTONE VS MINOTAUR — FULL FIGHT” are the
 same fight from different uploaders. Deduplicating on video ID handles
@@ -229,13 +216,31 @@ that.</p>
 and “EndGame.” I wrote a normalizer, added a manual alias map for the
 worst offenders, and still spent more time on entity matching than on
 any single API call.</p>
+<pre class="javascript"><code>// Normalize bot names across sources
+function normalizeBot(name) {
+  return name.toLowerCase().replace(/[-_\s]+/g, &#39; &#39;).trim();
+}
+// &quot;End_Game&quot; → &quot;end game&quot;  ✓
+// &quot;EndGame&quot;  → &quot;endgame&quot;   ✗ — still doesn&#39;t match
+// Solution: manual alias map for the 5-6 bots where this breaks</code></pre>
+<p>The cache layer was the other piece that took real engineering. I
+didn’t want to pay for the same SERP + LLM calls twice for the same
+matchup:</p>
+<pre class="javascript"><code>// &quot;minotaur vs tombstone&quot; and &quot;tombstone vs minotaur&quot; → same cache key
+export function matchupKey(botAId, botBId) {
+  return [botAId, botBId].sort().join(&#39;::&#39;);
+}</code></pre>
+<p>MongoDB Atlas free tier, 24-hour TTL, auto-expiring documents. If the
+database is down, the app still works. Just slower. First matchup: 8
+seconds. Cached repeat: under a second.</p>
 <p>If you’re building anything that pulls data from multiple web
-sources, budget twice the time you think you need for normalization. The
-APIs will work. The data won’t agree with itself.</p>
+sources, budget twice the time you think for normalization and caching.
+The APIs will work. The data won’t agree with itself.</p>
 <hr />
-<h2 id="what-it-costs-for-real">What It Costs (For Real)</h2>
-<p>I tracked actual spend over a month of building and testing. About
-200 predictions, plus all the scraper runs:</p>
+<h2 id="what-five-live-apps-actually-cost-me">What Five Live Apps
+Actually Cost Me</h2>
+<p>I tracked real spend over a month of development. About 200 matchup
+predictions, plus all the scraper runs:</p>
 <table>
 <colgroup>
 <col style="width: 40%" />
@@ -253,26 +258,27 @@ APIs will work. The data won’t agree with itself.</p>
 <tr class="odd">
 <td>Cloudflare Pages (5 sites)</td>
 <td>$0</td>
-<td>Free tier</td>
+<td>Free tier, stays free</td>
 </tr>
 <tr class="even">
 <td>MongoDB Atlas (caching)</td>
 <td>$0</td>
-<td>Free tier, 512MB</td>
+<td>Free M0 tier, 512MB</td>
 </tr>
 <tr class="odd">
 <td>Bright Data SERP API</td>
 <td>~$3</td>
-<td>~200 predictions x 6 queries</td>
+<td>~1,200 queries (200 predictions x 6 each)</td>
 </tr>
 <tr class="even">
-<td>Claude Haiku 4.5 (via OpenRouter)</td>
+<td>Claude Haiku 4.5 via OpenRouter</td>
 <td>~$2</td>
 <td>~200 LLM calls. Check <a
-href="https://openrouter.ai">openrouter.ai</a> for current pricing</td>
+href="https://openrouter.ai">openrouter.ai</a> for current per-token
+rates</td>
 </tr>
 <tr class="odd">
-<td>Bright Data YouTube/Unlocker</td>
+<td>Bright Data YouTube Scraper + Web Unlocker</td>
 <td>~$1</td>
 <td>One-time scraper runs</td>
 </tr>
@@ -283,13 +289,18 @@ href="https://openrouter.ai">openrouter.ai</a> for current pricing</td>
 </tr>
 </tbody>
 </table>
-<p>That $6 was the total during development. In production, the MongoDB
-cache means repeat matchups cost nothing. Hosting stays free
-indefinitely. The ongoing cost is basically zero unless I add new
-matchups or re-run scrapers.</p>
+<p>In production with caching, repeat matchups cost nothing. Hosting
+stays free. If nobody runs a new matchup, the monthly cost is $0.</p>
+<p>Note: Bright Data has minimum account tiers, so the marginal $4 in
+API costs assumes you’re already on their platform. If you’re starting
+from scratch, check their <a
+href="https://brightdata.com/pricing">pricing page</a> for current entry
+points.</p>
 <hr />
-<h2 id="try-it-break-it-build-on-it">Try It, Break It, Build on It</h2>
-<p>Everything is live and open source:</p>
+<h2 id="go-break-something">Go Break Something</h2>
+<p>Everything is live and open source. The H2H Predictor will give you a
+verdict on any matchup. The Encyclopedia has 30 bots you can search. The
+YouTube Ranker will show you which fights the internet watches most.</p>
 <table>
 <colgroup>
 <col style="width: 33%" />
@@ -343,7 +354,9 @@ href="https://github.com/yaronbeen/bright-data-x-battle-bots/tree/main/projects/
 </table>
 <p>Built for the <a
 href="https://brightdata.com/lp/battelbots">#battlebotsdev
-challenge</a>. The scraping patterns (SERP-to-sentiment, async dataset
-collection, anti-bot wiki scraping, crawl-to-markdown) transfer to any
-domain. Swap “BattleBots” for your brand, your competitors, or your
-niche. The pipeline is the same.</p>
+challenge</a>. The patterns (SERP-to-sentiment, wiki scraping past bot
+protection, async dataset collection, crawl-to-markdown, caching with
+graceful degradation) work for any domain. Swap “BattleBots” for your
+brand, your competitors, or your niche.</p>
+<p>Reddit has opinions about everything. Now you know how to turn them
+into structured data.</p>
