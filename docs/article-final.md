@@ -6,7 +6,7 @@ That's not me talking. That's an AI reading through dozens of Reddit threads and
 
 Total cost to build and run all five apps: about $6. Hosting is free forever.
 
-I built this for the [Bright Data x BattleBots developer challenge](https://brightdata.com/lp/battelbots) (#battlebotsdev). Full disclosure: I'm a Bright Data DevRel ambassador. The code is open source and every site is live. Judge the work, not the affiliation.
+I built this for the [Bright Data x BattleBots developer challenge](https://brightdata.com/lp/battelbots) (#battlebotsdev). Full disclosure: I'm a Bright Data DevRel ambassador. The code is open source and every site is live.
 
 The BattleBots angle is just the excuse. The real question: what happens when you try to pull structured data from Google, YouTube, protected wikis, and Reddit, then turn it all into something useful?
 
@@ -165,8 +165,6 @@ I tracked real spend over a month of development. About 200 matchup predictions,
 | **Total** | **~$6** | |
 
 In production with caching, repeat matchups cost nothing. Hosting stays free. If nobody runs a new matchup, the monthly cost is $0.
-
-Note: Bright Data has minimum account tiers, so the marginal $4 in API costs assumes you're already on their platform. If you're starting from scratch, check their [pricing page](https://brightdata.com/pricing) for current entry points.
 
 ---
 
