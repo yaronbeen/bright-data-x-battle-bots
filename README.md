@@ -53,7 +53,15 @@ LLM analytical verdict (optional)
 VS screen → verdict → comparison → evidence
 ```
 
+## Need a custom scraper?
+
+If you want to adapt this approach to a different domain or data source, you can build your own scraper with [Bright Data's Scraper Studio](https://brightdata.com/products/scraper-studio). Describe the data you need in plain English, and Scraper Studio generates a production-ready scraper with your exact output schema. It includes self-healing, so when the target site changes its layout, you describe the fix and ship a patch in minutes instead of rewriting code.
+
+## Free tier
+
+Every Bright Data account comes with 5,000 free credits per month (roughly $7.50 in value). Credits reset on the first of each month, and you can start without a credit card. That is enough to run several BattleBots matchups, test the SERP and sentiment pipeline, and decide whether Bright Data fits your project.
+
 ## Powered By
 
-- [Bright Data](https://brightdata.com) SERP API — same pattern as [unfancy-search](https://github.com/yaronbeen/unfancy-search)
-- [OpenRouter](https://openrouter.ai) — LLM routing (Kimi K2.6)
+- [Bright Data](https://brightdata.com) SERP API - same pattern as [unfancy-search](https://github.com/yaronbeen/unfancy-search)
+- [OpenRouter](https://openrouter.ai) - LLM routing (Kimi K2.6)
